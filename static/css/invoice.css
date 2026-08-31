@@ -37,14 +37,22 @@ body {
   /* box-shadow intentionally omitted — unsupported by WeasyPrint PDF renderer */
 }
 
-/* Header */
+/* Header — table layout so WeasyPrint and browsers both render side-by-side */
 .invoice-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 2rem;
-  flex-wrap: wrap;
+  display: table;
+  width: 100%;
   margin-bottom: 1.5rem;
+}
+
+.company-block,
+.invoice-meta-block {
+  display: table-cell;
+  vertical-align: top;
+}
+
+.invoice-meta-block {
+  text-align: right;
+  width: 45%;
 }
 
 .company-name {
