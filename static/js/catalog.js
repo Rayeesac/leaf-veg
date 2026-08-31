@@ -26,11 +26,25 @@
   const drawerItems   = document.getElementById('drawerItems');
   const totalWeightEl = document.getElementById('totalWeight');
   const grandTotalEl  = document.getElementById('grandTotal');
-  const buyerForm     = document.getElementById('buyerFormSection');
+  const totalWeightEl2 = document.getElementById('totalWeight2');
+  const grandTotalEl2  = document.getElementById('grandTotal2');
   const emptyMsg      = document.getElementById('emptyOrderMsg');
   const cartDataInput = document.getElementById('cartDataInput');
   const orderForm     = document.getElementById('orderForm');
   const drawerBadge   = document.getElementById('drawerBadge');
+  const mobileCartBar = document.getElementById('mobileCartBar');
+  const mcbCount      = document.getElementById('mcbCount');
+  const mcbTotal      = document.getElementById('mcbTotal');
+  const mcbBtn        = document.getElementById('mcbBtn');
+  const continueBtn   = document.getElementById('continueBtn');
+  const backBtn       = document.getElementById('backBtn');
+  const step1Panel    = document.getElementById('step1Panel');
+  const step2Panel    = document.getElementById('step2Panel');
+  const stepPill1     = document.getElementById('stepPill1');
+  const stepPill2     = document.getElementById('stepPill2');
+
+  // ---- Step state ----
+  var currentStep = 1;
 
   function showDrawer() {
     drawer.style.display = '';
@@ -40,6 +54,34 @@
   function hideDrawer() {
     drawer.style.display = 'none';
     if (layout) layout.classList.add('drawer-hidden');
+  }
+
+  function goToStep(n) {
+    currentStep = n;
+    if (n === 1) {
+      step1Panel.style.display = '';
+      step2Panel.style.display = 'none';
+      stepPill1.classList.add('active');
+      stepPill2.classList.remove('active');
+    } else {
+      step1Panel.style.display = 'none';
+      step2Panel.style.display = '';
+      stepPill1.classList.remove('active');
+      stepPill2.classList.add('active');
+      // Sync compact summary on step 2
+      if (totalWeightEl2) totalWeightEl2.textContent = totalWeightEl.textContent;
+      if (grandTotalEl2)  grandTotalEl2.textContent  = grandTotalEl.textContent;
+      // Scroll drawer to top
+      drawer.scrollTop = 0;
+    }
+  }
+
+  if (continueBtn) {
+    continueBtn.addEventListener('click', function () { goToStep(2); });
+  }
+
+  if (backBtn) {
+    backBtn.addEventListener('click', function () { goToStep(1); });
   }
 
   // ---- Category filter ----
@@ -71,7 +113,7 @@
     var price    = parseFloat(card.dataset.price) || 0;
     var title    = card.dataset.title;
     var code     = card.dataset.code;
-    var stepSize = 0.5;
+    var stepSize = 1;
 
     function clamp(val) {
       var n = parseFloat(val);
@@ -152,34 +194,125 @@
       showDrawer();
     } else {
       hideDrawer();
+      goToStep(1);
     }
 
-    // Show/hide buyer form
-    if (itemCount > 0) {
-      buyerForm.style.display = '';
-      emptyMsg.style.display  = 'none';
-    } else {
-      buyerForm.style.display = 'none';
-      emptyMsg.style.display  = '';
+    // Show/hide continue button and empty message
+    if (continueBtn) continueBtn.style.display = itemCount > 0 ? '' : 'none';
+    if (emptyMsg)    emptyMsg.style.display     = itemCount > 0 ? 'none' : '';
+
+    // Keep compact step-2 summary in sync while user is on step 2
+    if (currentStep === 2) {
+      if (totalWeightEl2) totalWeightEl2.textContent = totalWeightEl.textContent;
+      if (grandTotalEl2)  grandTotalEl2.textContent  = grandTotalEl.textContent;
+    }
+
+    // ---- Mobile cart bar (≤900px only) ----
+    var isMobile = window.matchMedia('(max-width: 900px)').matches;
+    if (mobileCartBar) {
+      if (isMobile && itemCount > 0) {
+        mobileCartBar.style.display = '';
+        document.body.classList.add('has-cart-bar');
+        if (mcbCount) mcbCount.textContent = itemCount + (itemCount === 1 ? ' item' : ' items');
+        if (mcbTotal) mcbTotal.textContent = '₹' + grandTotal.toFixed(2);
+      } else {
+        mobileCartBar.style.display = 'none';
+        document.body.classList.remove('has-cart-bar');
+      }
     }
   }
 
-  // ---- Form submission — inject cart JSON ----
+  // ---- Mobile cart bar button — scroll to order drawer ----
+  if (mcbBtn) {
+    mcbBtn.addEventListener('click', function () {
+      var drawerEl = document.getElementById('orderDrawer');
+      if (drawerEl) {
+        drawerEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  }
+
+  // ---- Form submission — AJAX, no page reload ----
   if (orderForm) {
     orderForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+
       if (cart.size === 0) {
-        e.preventDefault();
-        alert('Please add at least one vegetable to your order before submitting.');
+        showFieldError('__all__', 'Please add at least one vegetable to your order before submitting.');
         return;
       }
 
+      // Inject cart JSON
       var payload = [];
       cart.forEach(function (item) {
         payload.push({ id: item.id, weight_kg: item.weight_kg });
       });
-
       cartDataInput.value = JSON.stringify(payload);
+
+      // Clear previous errors
+      clearFormErrors();
+
+      var submitBtn = document.getElementById('submitBtn');
+      if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Submitting…'; }
+
+      var formData = new FormData(orderForm);
+
+      fetch(orderForm.action, {
+        method: 'POST',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        body: formData,
+      })
+        .then(function (res) {
+          return res.json().then(function (data) { return { status: res.status, data: data }; });
+        })
+        .then(function (result) {
+          if (result.data.redirect) {
+            window.location.href = result.data.redirect;
+            return;
+          }
+          // Show field-level errors
+          if (result.data.errors) {
+            Object.keys(result.data.errors).forEach(function (field) {
+              showFieldError(field, result.data.errors[field].join(' '));
+            });
+          }
+          if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = '✅ Place Pre-Order'; }
+        })
+        .catch(function () {
+          showFieldError('__all__', 'A network error occurred. Please try again.');
+          if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = '✅ Place Pre-Order'; }
+        });
     });
+  }
+
+  function clearFormErrors() {
+    orderForm.querySelectorAll('.field-error').forEach(function (el) { el.remove(); });
+    orderForm.querySelectorAll('.field-group').forEach(function (el) { el.classList.remove('has-error'); });
+    var existing = orderForm.querySelector('.form-error-banner');
+    if (existing) existing.remove();
+  }
+
+  function showFieldError(field, msg) {
+    if (field === '__all__') {
+      // Show as a banner above the submit button
+      var existing = orderForm.querySelector('.form-error-banner');
+      if (existing) { existing.textContent = msg; return; }
+      var banner = document.createElement('p');
+      banner.className = 'form-error-banner field-error';
+      banner.textContent = msg;
+      var submitBtn = document.getElementById('submitBtn');
+      orderForm.insertBefore(banner, submitBtn);
+      return;
+    }
+    // Map Django field name -> input id (e.g. buyer_name -> id_buyer_name)
+    var inputEl = orderForm.querySelector('[name="' + field + '"]');
+    if (!inputEl) return;
+    var group = inputEl.closest('.field-group');
+    if (group) group.classList.add('has-error');
+    var errEl = document.createElement('span');
+    errEl.className = 'field-error';
+    errEl.textContent = msg;
+    inputEl.insertAdjacentElement('afterend', errEl);
   }
 
   // Initial render

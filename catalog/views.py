@@ -71,20 +71,29 @@ def submit_order(request):
         cart_error = 'Invalid cart data. Please refresh and try again.'
 
     if cart_error:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            from django.http import JsonResponse
+            return JsonResponse({'errors': {'__all__': [cart_error]}}, status=422)
         messages.error(request, cart_error)
-        vegetables = Vegetable.objects.filter(is_available=True)
+        vegetables = Vegetable.objects.filter(is_available=True).order_by('category', 'title')
+        banners = Banner.objects.filter(is_active=True)
         return render(request, 'catalog/catalog.html', {
             'vegetables': vegetables,
+            'banners': banners,
             'form': form,
             'cart_error': cart_error,
             'page_title': 'Order Wholesale Produce',
         })
 
     if not form.is_valid():
-        messages.error(request, 'Please correct the errors below before submitting.')
-        vegetables = Vegetable.objects.filter(is_available=True)
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            from django.http import JsonResponse
+            return JsonResponse({'errors': form.errors}, status=422)
+        vegetables = Vegetable.objects.filter(is_available=True).order_by('category', 'title')
+        banners = Banner.objects.filter(is_active=True)
         return render(request, 'catalog/catalog.html', {
             'vegetables': vegetables,
+            'banners': banners,
             'form': form,
             'page_title': 'Order Wholesale Produce',
         })
@@ -113,10 +122,17 @@ def submit_order(request):
 
     if pre_order.items.count() == 0:
         pre_order.delete()
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            from django.http import JsonResponse
+            return JsonResponse({'errors': {'__all__': ['None of the selected vegetables are currently available.']}}, status=422)
         messages.error(request, 'None of the selected vegetables are currently available.')
         return redirect('catalog:catalog')
 
     logger.info('New pre-order created: %s for %s', pre_order.order_number, pre_order.buyer_name)
+    confirmation_url = redirect('catalog:order_confirmation', order_number=pre_order.order_number)['Location']
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        from django.http import JsonResponse
+        return JsonResponse({'redirect': confirmation_url})
     return redirect('catalog:order_confirmation', order_number=pre_order.order_number)
 
 

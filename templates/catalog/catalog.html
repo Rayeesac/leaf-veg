@@ -136,57 +136,98 @@
       <span id="drawerBadge" class="drawer-badge" style="position:relative;top:auto;right:auto;"></span>
     </div>
 
+    <!-- Step indicator -->
+    <div class="drawer-steps">
+      <div class="drawer-step active" id="stepPill1"><span class="step-num">1</span> Select Items</div>
+      <div class="drawer-step-arrow">&#8594;</div>
+      <div class="drawer-step" id="stepPill2"><span class="step-num">2</span> Your Details</div>
+    </div>
+
     <div class="drawer-body" id="drawerBody">
-      <div id="drawerItems" class="drawer-items">
-        <p class="drawer-empty">No items selected yet.</p>
-      </div>
 
-      <div class="drawer-summary">
-        <div class="summary-row">
-          <span>Total Weight</span>
-          <strong id="totalWeight">0.00 kg</strong>
+      <!-- ===== STEP 1: Cart summary + continue button ===== -->
+      <div id="step1Panel">
+        <div id="drawerItems" class="drawer-items">
+          <p class="drawer-empty">No items selected yet.</p>
         </div>
-        <div class="summary-row summary-total">
-          <span>Estimated Total</span>
-          <strong id="grandTotal">₹0.00</strong>
-        </div>
-      </div>
 
-      <!-- Buyer Info Form — shown when items are in cart -->
-      <div id="buyerFormSection" class="buyer-form-section" style="display:none;">
-        <h3 class="form-section-title">Buyer Information</h3>
-        <form method="post" action="{% url 'catalog:submit_order' %}" id="orderForm" novalidate>
-          {% csrf_token %}
-          <input type="hidden" name="cart_data" id="cartDataInput" />
-
-          {% for field in form %}
-          <div class="field-group {% if field.errors %}has-error{% endif %}">
-            <label for="{{ field.id_for_label }}">
-              {{ field.label }}
-              {% if field.field.required %}<span class="required">*</span>{% endif %}
-            </label>
-            {{ field }}
-            {% if field.errors %}
-            <span class="field-error">{{ field.errors|join:", " }}</span>
-            {% endif %}
+        <div class="drawer-summary">
+          <div class="summary-row">
+            <span>Total Weight</span>
+            <strong id="totalWeight">0.00 kg</strong>
           </div>
-          {% endfor %}
+          <div class="summary-row summary-total">
+            <span>Estimated Total</span>
+            <strong id="grandTotal">₹0.00</strong>
+          </div>
+        </div>
 
-          <button type="submit" class="btn-submit" id="submitBtn">
-            ✅ Place Pre-Order
-          </button>
-          <p class="submit-note">Your order will be reviewed and confirmed by our team.</p>
-        </form>
+        <div id="emptyOrderMsg" class="empty-order-msg">
+          <p>Add items to your cart to begin a pre-order.</p>
+        </div>
+
+        <button type="button" class="btn-continue" id="continueBtn" style="display:none;">
+          Continue to Pre-Order &rarr;
+        </button>
       </div>
 
-      <div id="emptyOrderMsg" class="empty-order-msg">
-        <p>Add items to your cart to begin a pre-order.</p>
+      <!-- ===== STEP 2: Buyer form ===== -->
+      <div id="step2Panel" style="display:none;">
+        <button type="button" class="btn-back" id="backBtn">&larr; Back to Products</button>
+
+        <div class="drawer-summary drawer-summary-compact">
+          <div class="summary-row">
+            <span>Total Weight</span>
+            <strong id="totalWeight2">0.00 kg</strong>
+          </div>
+          <div class="summary-row summary-total">
+            <span>Estimated Total</span>
+            <strong id="grandTotal2">₹0.00</strong>
+          </div>
+        </div>
+
+        <div id="buyerFormSection" class="buyer-form-section">
+          <h3 class="form-section-title">Buyer Information</h3>
+          <form method="post" action="{% url 'catalog:submit_order' %}" id="orderForm" novalidate>
+            {% csrf_token %}
+            <input type="hidden" name="cart_data" id="cartDataInput" />
+
+            {% for field in form %}
+            <div class="field-group {% if field.errors %}has-error{% endif %}">
+              <label for="{{ field.id_for_label }}">
+                {{ field.label }}
+                {% if field.field.required %}<span class="required">*</span>{% endif %}
+              </label>
+              {{ field }}
+              {% if field.errors %}
+              <span class="field-error">{{ field.errors|join:", " }}</span>
+              {% endif %}
+            </div>
+            {% endfor %}
+
+            <button type="submit" class="btn-submit" id="submitBtn">
+              ✅ Place Pre-Order
+            </button>
+            <p class="submit-note">Your order will be reviewed and confirmed by our team.</p>
+          </form>
+        </div>
       </div>
+
     </div>
   </aside>
 
 
 </div><!-- /catalog-layout -->
+
+<!-- ===== Mobile Cart Bar (fixed bottom, mobile only) ===== -->
+<div class="mobile-cart-bar" id="mobileCartBar" style="display:none;">
+  <div class="mcb-info">
+    <span class="mcb-count" id="mcbCount">0 items</span>
+    <span class="mcb-sep">&middot;</span>
+    <span class="mcb-total" id="mcbTotal">₹0.00</span>
+  </div>
+  <button type="button" class="mcb-btn" id="mcbBtn">View Pre-Order &rarr;</button>
+</div>
 {% endblock %}
 
 {% block extra_js %}
