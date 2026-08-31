@@ -1,0 +1,235 @@
+/* ============================================================
+   LEAFS Chinese Vegetables — Main Global Stylesheet
+   Theme: Forest Green #2E7D32 | Mint #E8F5E9 | Charcoal #212121
+   ============================================================ */
+
+/* ---------- Reset & Base ---------- */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --green-dark:   #2E7D32;
+  --green-mid:    #388E3C;
+  --green-light:  #E8F5E9;
+  --green-border: #C8E6C9;
+  --charcoal:     #212121;
+  --text-body:    #333333;
+  --text-muted:   #6B7280;
+  --white:        #FFFFFF;
+  --surface:      #F7F9F7;
+  --danger:       #D32F2F;
+  --danger-bg:    #FFEBEE;
+  --success:      #2E7D32;
+  --success-bg:   #E8F5E9;
+  --warning:      #F57C00;
+  --radius:       10px;
+  --radius-sm:    6px;
+  --shadow-sm:    0 1px 3px rgba(0,0,0,.08);
+  --shadow-md:    0 4px 12px rgba(0,0,0,.12);
+  --transition:   0.18s ease;
+  --font:         'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+html { font-size: 15px; line-height: 1.6; }
+
+body {
+  font-family: var(--font);
+  color: var(--text-body);
+  background: var(--surface);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+a { color: var(--green-dark); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+img { max-width: 100%; display: block; }
+
+.container {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 1.25rem;
+}
+
+/* ---------- Header ---------- */
+.site-header {
+  background: var(--green-dark);
+  color: var(--white);
+  padding: .75rem 0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 8px rgba(0,0,0,.2);
+}
+
+.header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: .5rem;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  color: var(--white);
+  text-decoration: none;
+}
+
+.brand:hover { text-decoration: none; }
+
+.brand-leaf { font-size: 1.8rem; }
+
+.brand-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.brand-text strong {
+  font-size: 1.15rem;
+  letter-spacing: .05em;
+}
+
+.brand-text small {
+  font-size: .72rem;
+  opacity: .85;
+  font-weight: 400;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.nav-tag {
+  font-size: .78rem;
+  background: rgba(255,255,255,.15);
+  border: 1px solid rgba(255,255,255,.25);
+  border-radius: 20px;
+  padding: .25rem .75rem;
+  color: var(--white);
+}
+
+/* ---------- Messages / Alerts ---------- */
+.messages-bar { margin: .75rem auto; }
+
+.alert {
+  border-radius: var(--radius-sm);
+  padding: .75rem 1rem;
+  margin-bottom: .5rem;
+  font-size: .9rem;
+}
+
+.alert-error, .alert-danger {
+  background: var(--danger-bg);
+  color: var(--danger);
+  border: 1px solid #EF9A9A;
+}
+
+.alert-success {
+  background: var(--success-bg);
+  color: var(--success);
+  border: 1px solid var(--green-border);
+}
+
+.alert-warning {
+  background: #FFF3E0;
+  color: var(--warning);
+  border: 1px solid #FFCC02;
+}
+
+/* ---------- Buttons ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  padding: .6rem 1.2rem;
+  border-radius: var(--radius-sm);
+  font-size: .9rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: var(--transition);
+  text-decoration: none;
+}
+
+.btn-primary {
+  background: var(--green-dark);
+  color: var(--white);
+  border-color: var(--green-dark);
+}
+.btn-primary:hover { background: var(--green-mid); border-color: var(--green-mid); text-decoration: none; }
+
+.btn-secondary {
+  background: #1565C0;
+  color: var(--white);
+  border-color: #1565C0;
+}
+.btn-secondary:hover { background: #0D47A1; text-decoration: none; }
+
+.btn-outline {
+  background: transparent;
+  color: var(--green-dark);
+  border-color: var(--green-dark);
+}
+.btn-outline:hover { background: var(--green-light); text-decoration: none; }
+
+/* ---------- Footer ---------- */
+.site-footer {
+  margin-top: auto;
+  background: var(--green-dark);
+  color: rgba(255,255,255,.85);
+  font-size: .85rem;
+}
+
+.footer-inner { padding: 2rem 1.25rem 1.5rem; }
+
+.footer-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  align-items: start;
+}
+
+@media (max-width: 640px) {
+  .footer-columns { grid-template-columns: 1fr; }
+}
+
+.footer-brand {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: .5rem;
+}
+
+.footer-address {
+  font-style: normal;
+  line-height: 1.7;
+  color: rgba(255,255,255,.8);
+  margin-bottom: .75rem;
+  font-size: .84rem;
+}
+
+.footer-copy {
+  color: rgba(255,255,255,.7);
+  font-size: .8rem;
+  margin-top: .5rem;
+}
+
+.footer-sub {
+  color: rgba(255,255,255,.45);
+  font-size: .74rem;
+  margin-top: .2rem;
+}
+
+.footer-map iframe {
+  display: block;
+  width: 100%;
+  border-radius: 8px;
+  border: 2px solid rgba(255,255,255,.15);
+}
+
+/* ---------- Utility ---------- */
+.text-right { text-align: right; }
+.text-muted { color: var(--text-muted); }

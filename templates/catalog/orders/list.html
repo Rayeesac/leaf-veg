@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Manage Orders — LEAFS{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/manage.css' %}" />
+<style>
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.75rem;
+  }
+  .stat-card {
+    background: var(--white);
+    border: 1.5px solid var(--green-border);
+    border-radius: var(--radius);
+    padding: 1rem 1.25rem;
+    text-align: center;
+  }
+  .stat-value { font-size: 1.6rem; font-weight: 800; color: var(--green-dark); line-height: 1.1; }
+  .stat-label { font-size: .75rem; color: var(--text-muted); margin-top: .25rem; text-transform: uppercase; letter-spacing: .05em; }
+
+  .status-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+    margin-bottom: 1.25rem;
+  }
+  .filter-btn {
+    border: 1.5px solid var(--green-border);
+    background: var(--white);
+    border-radius: 20px;
+    padding: .25rem .85rem;
+    font-size: .78rem;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: var(--transition);
+  }
+  .filter-btn:hover { background: var(--green-light); color: var(--green-dark); text-decoration: none; }
+  .filter-btn.active { background: var(--green-dark); color: var(--white); border-color: var(--green-dark); }
+
+  .status-badge {
+    display: inline-block;
+    padding: .15rem .6rem;
+    border-radius: 12px;
+    font-size: .72rem;
+    font-weight: 700;
+  }
+  .status-pending   { background: #FFF9C4; color: #F57F17; }
+  .status-packed    { background: #E3F2FD; color: #1565C0; }
+  .status-ready     { background: #F3E5F5; color: #6A1B9A; }
+  .status-completed { background: #E8F5E9; color: #2E7D32; }
+  .status-cancelled { background: #FFEBEE; color: #C62828; }
+
+  .order-number-link { font-weight: 700; color: var(--green-dark); text-decoration: none; font-family: monospace; font-size: .88rem; }
+  .order-number-link:hover { text-decoration: underline; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="manage-page container">
+
+  <div class="manage-header">
+    <div>
+      <h1>📋 Manage Orders</h1>
+      <p class="manage-subtitle">View all wholesale pre-orders, their status, and details.</p>
+    </div>
+    <a href="{% url 'catalog:catalog' %}" class="btn btn-outline">← Back to Catalog</a>
+  </div>
+
+  {% if messages %}
+  <div class="messages-local">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- Summary Stats -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-value">{{ stats.total_orders|default:"0" }}</div>
+      <div class="stat-label">Total Orders</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">{{ status_counts.pending|default:"0" }}</div>
+      <div class="stat-label">Pending</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">{{ status_counts.packed|default:"0" }}</div>
+      <div class="stat-label">Packed</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">{{ status_counts.ready|default:"0" }}</div>
+      <div class="stat-label">Ready for Pickup</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">{{ status_counts.completed|default:"0" }}</div>
+      <div class="stat-label">Completed</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">₹{{ stats.total_amount|default:"0" }}</div>
+      <div class="stat-label">Total Revenue</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">{{ stats.total_weight|default:"0" }} kg</div>
+      <div class="stat-label">Total Weight</div>
+    </div>
+  </div>
+
+  <!-- Status Filter -->
+  <div class="status-filters">
+    <a href="{% url 'catalog:order_list' %}" class="filter-btn {% if not status_filter %}active{% endif %}">All</a>
+    {% for value, label in order_statuses %}
+    <a href="{% url 'catalog:order_list' %}?status={{ value }}"
+       class="filter-btn {% if status_filter == value %}active{% endif %}">
+      {{ label }}
+    </a>
+    {% endfor %}
+  </div>
+
+  {% if orders %}
+  <div class="banner-table-wrap">
+    <table class="manage-table">
+      <thead>
+        <tr>
+          <th>Order #</th>
+          <th>Buyer</th>
+          <th>Contact</th>
+          <th>Phone</th>
+          <th>Pickup Date</th>
+          <th class="text-right">Weight (kg)</th>
+          <th class="text-right">Amount</th>
+          <th>Status</th>
+          <th>Placed On</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for order in orders %}
+        <tr>
+          <td><a href="{% url 'catalog:order_detail' order.order_number %}" class="order-number-link">{{ order.order_number }}</a></td>
+          <td><strong>{{ order.buyer_name }}</strong></td>
+          <td>{{ order.contact_person }}</td>
+          <td>{{ order.phone_number }}</td>
+          <td>{{ order.pickup_date|date:"d M Y" }}</td>
+          <td class="text-right">{{ order.total_weight_kg }}</td>
+          <td class="text-right"><strong>₹{{ order.total_amount }}</strong></td>
+          <td><span class="status-badge status-{{ order.status }}">{{ order.get_status_display }}</span></td>
+          <td><small class="text-muted">{{ order.created_at|date:"d M Y, H:i" }}</small></td>
+          <td class="action-cell">
+            <a href="{% url 'catalog:order_detail' order.order_number %}" class="btn-action edit">View</a>
+            <a href="{% url 'catalog:invoice_print' order.order_number %}" class="btn-action" style="background:#F3E5F5;color:#6A1B9A;" target="_blank">Invoice</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <p>No orders found{% if status_filter %} with status "{{ status_filter }}"{% endif %}.</p>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

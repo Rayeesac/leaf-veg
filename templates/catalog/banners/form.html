@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ page_title }} — LEAFS{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/manage.css' %}" />
+{% endblock %}
+
+{% block content %}
+<div class="manage-page container">
+
+  <div class="manage-header">
+    <div>
+      <h1>{% if banner %}✏️ Edit Banner{% else %}➕ Add New Banner{% endif %}</h1>
+      <p class="manage-subtitle">{{ page_title }}</p>
+    </div>
+    <a href="{% url 'catalog:banner_list' %}" class="btn btn-outline">← Back to Banners</a>
+  </div>
+
+  {% if messages %}
+  <div class="messages-local">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <div class="form-card">
+    <form method="post" enctype="multipart/form-data" novalidate>
+      {% csrf_token %}
+
+      {% for field in form %}
+      <div class="field-group {% if field.errors %}has-error{% endif %}">
+        <label for="{{ field.id_for_label }}">
+          {{ field.label }}
+          {% if field.field.required %}<span class="required">*</span>{% endif %}
+        </label>
+
+        {% if field.name == 'is_active' %}
+        <div class="check-wrap">
+          {{ field }}
+          <span class="check-label">Show this banner on the catalog page</span>
+        </div>
+        {% else %}
+        {{ field }}
+        {% endif %}
+
+        {% if field.help_text %}
+        <p class="help-text">{{ field.help_text }}</p>
+        {% endif %}
+        {% if field.errors %}
+        <span class="field-error">{{ field.errors|join:", " }}</span>
+        {% endif %}
+
+        {% if field.name == 'image' and banner.image %}
+        <div class="current-image">
+          <p class="help-text">Current image:</p>
+          <img src="{{ banner.image.url }}" alt="Current banner image" class="current-thumb" />
+        </div>
+        {% endif %}
+      </div>
+      {% endfor %}
+
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">{{ action_label }}</button>
+        <a href="{% url 'catalog:banner_list' %}" class="btn btn-outline">Cancel</a>
+      </div>
+    </form>
+  </div>
+
+</div>
+{% endblock %}

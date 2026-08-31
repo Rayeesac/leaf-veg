@@ -1,0 +1,117 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+  <a href="{% url 'admin:index' %}">{% trans "Home" %}</a>
+  &rsaquo;
+  <a href="{% url 'admin:catalog_preorder_changelist' %}">Pre-Orders</a>
+  &rsaquo;
+  Pack-Up Batch Report
+</div>
+{% endblock %}
+
+{% block content %}
+<style>
+  .packup-page { max-width: 900px; }
+  .report-controls { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+  .report-controls label { font-weight: 600; }
+  .report-controls input[type="date"] { padding: .4rem .6rem; border: 1px solid #ccc; border-radius: 4px; font-size: .9rem; }
+  .report-controls button { padding: .4rem 1rem; background: #2E7D32; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: .9rem; }
+  .summary-cards { display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+  .stat-card { background: #E8F5E9; border: 1.5px solid #C8E6C9; border-radius: 8px; padding: .9rem 1.5rem; }
+  .stat-card strong { display: block; font-size: 1.6rem; color: #2E7D32; }
+  .stat-card span { font-size: .82rem; color: #666; }
+  .report-table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+  .report-table th { background: #2E7D32; color: white; padding: .55rem .75rem; text-align: left; }
+  .report-table td { padding: .5rem .75rem; border-bottom: 1px solid #C8E6C9; }
+  .report-table tr:nth-child(even) td { background: #F1F8E9; }
+  .report-table tfoot td { background: #C8E6C9; font-weight: 700; }
+  .no-data { text-align: center; color: #888; padding: 2rem; }
+  .orders-section { margin-top: 2rem; }
+  .order-pills { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .5rem; }
+  .order-pill { background: #E3F2FD; color: #1565C0; border-radius: 12px; padding: .2rem .65rem; font-size: .8rem; font-weight: 600; text-decoration: none; }
+  .order-pill:hover { background: #1565C0; color: white; }
+  @media print {
+    .report-controls, .breadcrumbs, #header, #nav-sidebar, #toolbar, .object-tools { display: none !important; }
+    body { padding: 0; }
+  }
+</style>
+
+<div class="packup-page">
+  <h1>🥬 Pack-Up Batch Report</h1>
+  <p style="color:#666;margin:.4rem 0 1rem;">Shows total kilograms required per vegetable for all active pre-orders on the selected date.</p>
+
+  <!-- Date selector -->
+  <form method="get" class="report-controls">
+    <label for="date-picker">Pickup Date:</label>
+    <input type="date" id="date-picker" name="date" value="{{ report_date|date:'Y-m-d' }}" />
+    <button type="submit">Load Report</button>
+    <button type="button" onclick="window.print()">🖨 Print</button>
+  </form>
+
+  <!-- Summary cards -->
+  <div class="summary-cards">
+    <div class="stat-card">
+      <strong>{{ order_count }}</strong>
+      <span>Active Orders on this Date</span>
+    </div>
+    <div class="stat-card">
+      <strong>{{ grand_total_kg|floatformat:2 }} kg</strong>
+      <span>Total Weight to Pack</span>
+    </div>
+    <div class="stat-card">
+      <strong>{{ line_items|length }}</strong>
+      <span>Unique Vegetables</span>
+    </div>
+  </div>
+
+  <!-- Aggregation Table -->
+  {% if line_items %}
+  <table class="report-table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Vegetable</th>
+        <th>Code</th>
+        <th>Category</th>
+        <th style="text-align:right">Total to Pack (kg)</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in line_items %}
+      <tr>
+        <td>{{ forloop.counter }}</td>
+        <td><strong>{{ item.vegetable__title }}</strong></td>
+        <td style="font-family:monospace;color:#888">{{ item.vegetable__code }}</td>
+        <td>{{ item.vegetable__category }}</td>
+        <td style="text-align:right;font-weight:700;color:#2E7D32">{{ item.total_kg|floatformat:2 }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+    <tfoot>
+      <tr>
+        <td colspan="4"><strong>GRAND TOTAL</strong></td>
+        <td style="text-align:right">{{ grand_total_kg|floatformat:2 }} kg</td>
+      </tr>
+    </tfoot>
+  </table>
+  {% else %}
+  <p class="no-data">No active orders found for {{ report_date|date:"l, d F Y" }}.</p>
+  {% endif %}
+
+  <!-- Linked Orders -->
+  {% if orders %}
+  <div class="orders-section">
+    <h3>Active Orders on {{ report_date|date:"d F Y" }}</h3>
+    <div class="order-pills">
+      {% for order in orders %}
+      <a href="{% url 'admin:catalog_preorder_change' order.pk %}" class="order-pill">
+        {{ order.order_number }} — {{ order.buyer_name }}
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

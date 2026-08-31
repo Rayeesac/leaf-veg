@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Manage Vegetables — LEAFS{% endblock %}
+
+{% block content %}
+<div class="manage-page container">
+
+  <div class="manage-header">
+    <div>
+      <h1>🥬 Manage Vegetables</h1>
+      <p class="manage-subtitle">Add, edit, or remove products from the wholesale catalog.</p>
+    </div>
+    <a href="{% url 'catalog:vegetable_create' %}" class="btn btn-primary">+ Add New Vegetable</a>
+  </div>
+
+  {% if messages %}
+  <div class="messages-local">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% if vegetables %}
+  <div class="banner-table-wrap">
+    <table class="manage-table">
+      <thead>
+        <tr>
+          <th>Image</th>
+          <th>Title</th>
+          <th>SKU / Code</th>
+          <th>Category</th>
+          <th class="text-right">Price / kg</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for veg in vegetables %}
+        <tr class="{% if not veg.is_available %}row-inactive{% endif %}">
+          <td>
+            {% if veg.image %}
+            <img src="{{ veg.image.url }}" alt="{{ veg.title }}" class="thumb" />
+            {% else %}
+            <div class="thumb thumb-placeholder">🥬</div>
+            {% endif %}
+          </td>
+          <td>
+            <strong>{{ veg.title }}</strong>
+            {% if veg.description %}
+            <br><small class="text-muted">{{ veg.description|truncatechars:55 }}</small>
+            {% endif %}
+          </td>
+          <td><code>{{ veg.code }}</code></td>
+          <td>{{ veg.get_category_display }}</td>
+          <td class="text-right"><strong>₹{{ veg.price_per_kg }}</strong></td>
+          <td>
+            <form method="post" action="{% url 'catalog:vegetable_toggle' veg.pk %}" style="display:inline">
+              {% csrf_token %}
+              <button type="submit" class="toggle-btn {% if veg.is_available %}active{% endif %}">
+                {% if veg.is_available %}● In Stock{% else %}○ Out of Stock{% endif %}
+              </button>
+            </form>
+          </td>
+          <td class="action-cell">
+            <a href="{% url 'catalog:vegetable_edit' veg.pk %}" class="btn-action edit">Edit</a>
+            <form method="post" action="{% url 'catalog:vegetable_delete' veg.pk %}" style="display:inline"
+                  onsubmit="return confirm('Delete \'{{ veg.title|escapejs }}\'? This cannot be undone.')">
+              {% csrf_token %}
+              <button type="submit" class="btn-action delete">Delete</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <p>No vegetables in the catalog yet. <a href="{% url 'catalog:vegetable_create' %}">Add your first vegetable →</a></p>
+  </div>
+  {% endif %}
+
+  <div style="display:flex;gap:.75rem;margin-top:1.5rem;flex-wrap:wrap;">
+    <a href="{% url 'catalog:catalog' %}" class="btn btn-outline">← Back to Catalog</a>
+    <a href="{% url 'catalog:banner_list' %}" class="btn btn-outline">🖼 Manage Banners</a>
+    <a href="{% url 'catalog:order_list' %}" class="btn btn-outline">📋 Manage Orders</a>
+  </div>
+
+</div>
+{% endblock %}

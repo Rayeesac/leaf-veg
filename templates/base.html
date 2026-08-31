@@ -1,0 +1,93 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}LEAFS Chinese Vegetables{% endblock %}</title>
+
+  <link rel="icon" type="image/svg+xml" href="{% static 'favicon.svg' %}" />
+  <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}" />
+  <link rel="shortcut icon" href="{% static 'favicon.ico' %}" />
+
+  <!-- Google Fonts — system-equivalent stack avoids external requests in production -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="{% static 'css/main.css' %}" />
+  <link rel="stylesheet" href="{% static 'css/manage.css' %}" />
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+  <!-- ====== Site Header ====== -->
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="{% url 'catalog:catalog' %}" class="brand">
+        <span class="brand-leaf">🌿</span>
+        <span class="brand-text">
+          <strong>LEAFS</strong>
+          <small>Chinese Vegetables</small>
+        </span>
+      </a>
+      <nav class="header-nav">
+        <span class="nav-tag">Wholesale Pre-Order System</span>
+        {% if user.is_superuser %}
+        <a href="{% url 'catalog:order_list' %}" class="nav-manage-link">📋 Orders</a>
+        <a href="{% url 'catalog:vegetable_list' %}" class="nav-manage-link">🥬 Vegetables</a>
+        <a href="{% url 'catalog:banner_list' %}" class="nav-manage-link">🖼 Banners</a>
+        {% endif %}
+      </nav>
+    </div>
+  </header>
+
+  <!-- ====== Flash Messages ====== -->
+  {% if messages %}
+  <div class="messages-bar container">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- ====== Main Content ====== -->
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- ====== Footer ====== -->
+  <footer class="site-footer">
+    <div class="footer-inner container">
+
+      <!-- Map + Info columns -->
+      <div class="footer-columns">
+        <div class="footer-info">
+          <p class="footer-brand">🌿 LEAFS Chinese Vegetables</p>
+          <address class="footer-address">
+            2234+C8G, Kottakkal - Ateeri - Kuzhippuram Rd,<br>
+            Kottakkal, Kerala 676503
+          </address>
+          <p class="footer-copy">© {% now "Y" %} LEAFS Chinese Vegetables &mdash; Wholesale Produce Supplier</p>
+          <p class="footer-sub">Pre-order system for wholesale buyers only.</p>
+        </div>
+
+        <div class="footer-map">
+          <iframe
+            title="LEAFS Chinese Vegetables location"
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d979.3!2d76.0032175!3d11.0036981!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3ba7b5c26d65796f%3A0xacd7161adf7e19a4!2sLEAFS%20CHINESE%20VEGETABLES!5e0!3m2!1sen!2sin!4v1!5m2!1sen!2sin"
+            width="100%"
+            height="220"
+            style="border:0;border-radius:8px;"
+            allowfullscreen=""
+            loading="lazy"
+            referrerpolicy="no-referrer-when-downgrade">
+          </iframe>
+        </div>
+      </div>
+
+    </div>
+  </footer>
+
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

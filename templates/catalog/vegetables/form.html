@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ page_title }} — LEAFS{% endblock %}
+
+{% block content %}
+<div class="manage-page container">
+
+  <div class="manage-header">
+    <div>
+      <h1>{% if veg %}✏️ Edit Vegetable{% else %}➕ Add New Vegetable{% endif %}</h1>
+      <p class="manage-subtitle">{{ page_title }}</p>
+    </div>
+    <a href="{% url 'catalog:vegetable_list' %}" class="btn btn-outline">← Back to Vegetables</a>
+  </div>
+
+  {% if messages %}
+  <div class="messages-local">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <div class="veg-form-layout">
+
+    <div class="form-card">
+      <form method="post" enctype="multipart/form-data" novalidate>
+        {% csrf_token %}
+
+        {% for field in form %}
+        <div class="field-group {% if field.errors %}has-error{% endif %}">
+          <label for="{{ field.id_for_label }}">
+            {{ field.label }}
+            {% if field.field.required %}<span class="required">*</span>{% endif %}
+          </label>
+
+          {% if field.name == 'is_available' %}
+          <div class="check-wrap">
+            {{ field }}
+            <span class="check-label">Show as In Stock on the catalog</span>
+          </div>
+          {% else %}
+          {{ field }}
+          {% endif %}
+
+          {% if field.help_text %}
+          <p class="help-text">{{ field.help_text }}</p>
+          {% endif %}
+          {% if field.errors %}
+          <span class="field-error">{{ field.errors|join:", " }}</span>
+          {% endif %}
+
+          {% if field.name == 'image' and veg.image %}
+          <div class="current-image">
+            <p class="help-text">Current image:</p>
+            <img src="{{ veg.image.url }}" alt="{{ veg.title }}" class="current-thumb" />
+          </div>
+          {% endif %}
+        </div>
+        {% endfor %}
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">{{ action_label }}</button>
+          <a href="{% url 'catalog:vegetable_list' %}" class="btn btn-outline">Cancel</a>
+        </div>
+      </form>
+    </div>
+
+    <!-- Preview card (edit mode only) -->
+    {% if veg %}
+    <div class="veg-preview-card">
+      <p class="preview-label">Catalog Preview</p>
+      <div class="preview-card-image">
+        {% if veg.image %}
+        <img src="{{ veg.image.url }}" alt="{{ veg.title }}" />
+        {% else %}
+        <div class="preview-placeholder">🥬</div>
+        {% endif %}
+        <span class="stock-badge {% if veg.is_available %}in{% else %}out{% endif %}">
+          {% if veg.is_available %}In Stock{% else %}Out of Stock{% endif %}
+        </span>
+      </div>
+      <div class="preview-card-body">
+        <p class="preview-code">{{ veg.code }}</p>
+        <p class="preview-title">{{ veg.title }}</p>
+        <p class="preview-cat">{{ veg.get_category_display }}</p>
+        <p class="preview-price">₹{{ veg.price_per_kg }} <span>/ kg</span></p>
+      </div>
+    </div>
+    {% endif %}
+
+  </div>
+
+</div>
+{% endblock %}

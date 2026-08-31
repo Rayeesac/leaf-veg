@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Manage Banners — LEAFS{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/manage.css' %}" />
+{% endblock %}
+
+{% block content %}
+<div class="manage-page container">
+
+  <div class="manage-header">
+    <div>
+      <h1>🖼 Manage Banners</h1>
+      <p class="manage-subtitle">Banners appear as a hero slideshow above the product catalog.</p>
+    </div>
+    <a href="{% url 'catalog:banner_create' %}" class="btn btn-primary">+ Add New Banner</a>
+  </div>
+
+  {% if messages %}
+  <div class="messages-local">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% if banners %}
+  <div class="banner-table-wrap">
+    <table class="manage-table">
+      <thead>
+        <tr>
+          <th style="width:50px">#</th>
+          <th>Heading</th>
+          <th>Tag Label</th>
+          <th>Image</th>
+          <th>Order</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for banner in banners %}
+        <tr class="{% if not banner.is_active %}row-inactive{% endif %}">
+          <td>{{ banner.pk }}</td>
+          <td>
+            <strong>{{ banner.heading }}</strong>
+            {% if banner.subheading %}
+            <br><small class="text-muted">{{ banner.subheading|truncatechars:60 }}</small>
+            {% endif %}
+          </td>
+          <td><code>{{ banner.tag_label|default:"—" }}</code></td>
+          <td>
+            {% if banner.image %}
+            <img src="{{ banner.image.url }}" alt="" class="thumb" />
+            {% else %}
+            <span class="no-image">No image</span>
+            {% endif %}
+          </td>
+          <td class="text-center">{{ banner.order }}</td>
+          <td>
+            <form method="post" action="{% url 'catalog:banner_toggle' banner.pk %}" style="display:inline">
+              {% csrf_token %}
+              <button type="submit" class="toggle-btn {% if banner.is_active %}active{% endif %}">
+                {% if banner.is_active %}● Active{% else %}○ Hidden{% endif %}
+              </button>
+            </form>
+          </td>
+          <td class="action-cell">
+            <a href="{% url 'catalog:banner_edit' banner.pk %}" class="btn-action edit">Edit</a>
+            <form method="post" action="{% url 'catalog:banner_delete' banner.pk %}" style="display:inline"
+                  onsubmit="return confirm('Delete banner \'{{ banner.heading|escapejs }}\'?')">
+              {% csrf_token %}
+              <button type="submit" class="btn-action delete">Delete</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <p>No banners yet. <a href="{% url 'catalog:banner_create' %}">Add your first banner →</a></p>
+  </div>
+  {% endif %}
+
+  <p class="back-link"><a href="{% url 'catalog:catalog' %}">← Back to Catalog</a></p>
+</div>
+{% endblock %}

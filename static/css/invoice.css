@@ -1,0 +1,247 @@
+/* ============================================================
+   Invoice Styles — Screen + Print
+   ============================================================ */
+
+:root {
+  --green-dark:  #2E7D32;
+  --green-light: #E8F5E9;
+  --green-border:#C8E6C9;
+  --charcoal:    #212121;
+  --text-body:   #333;
+  --text-muted:  #6B7280;
+  --white:       #fff;
+  --danger:      #D32F2F;
+  --font: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  --radius: 8px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font);
+  color: var(--text-body);
+  background: #F0F0F0;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.invoice-body { padding: 2rem 1rem 5rem; }
+
+.invoice-page {
+  max-width: 820px;
+  margin: 0 auto;
+  background: var(--white);
+  border: 1px solid #ddd;
+  border-radius: var(--radius);
+  padding: 2.5rem 3rem;
+  /* box-shadow intentionally omitted — unsupported by WeasyPrint PDF renderer */
+}
+
+/* Header */
+.invoice-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 2rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+
+.company-name {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--green-dark);
+  margin-bottom: .2rem;
+}
+
+.company-tagline {
+  font-size: .82rem;
+  color: var(--text-muted);
+  margin-bottom: .5rem;
+}
+
+address {
+  font-style: normal;
+  font-size: .85rem;
+  color: var(--text-body);
+  line-height: 1.7;
+}
+
+.invoice-label {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--charcoal);
+  letter-spacing: .04em;
+  margin-bottom: .6rem;
+  text-align: right;
+}
+
+.invoice-meta-table { font-size: .85rem; }
+.invoice-meta-table td { padding: .15rem .5rem; }
+.invoice-meta-table td:first-child { color: var(--text-muted); }
+.invoice-meta-table td:last-child { font-weight: 500; }
+
+/* Status Pill */
+.status-pill {
+  display: inline-block;
+  padding: .15rem .5rem;
+  border-radius: 12px;
+  font-size: .75rem;
+  font-weight: 600;
+}
+.status-pending   { background: #FFF9C4; color: #F57F17; }
+.status-packed    { background: #E3F2FD; color: #1565C0; }
+.status-ready     { background: #F3E5F5; color: #6A1B9A; }
+.status-completed { background: var(--green-light); color: var(--green-dark); }
+.status-cancelled { background: #FFEBEE; color: var(--danger); }
+
+.invoice-divider {
+  border: none;
+  border-top: 2px solid var(--green-dark);
+  margin: 1.25rem 0;
+}
+
+/* Bill To */
+.bill-to { margin-bottom: 1.5rem; }
+
+.bill-to h3 {
+  font-size: .8rem;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--text-muted);
+  margin-bottom: .4rem;
+}
+
+.bill-name { font-size: 1.05rem; font-weight: 700; color: var(--charcoal); }
+.bill-notes { color: var(--text-muted); font-size: .85rem; margin-top: .3rem; }
+
+/* Line Items Table */
+.invoice-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .88rem;
+  margin-bottom: 1.5rem;
+}
+
+.invoice-table th {
+  background: var(--green-dark);
+  color: var(--white);
+  padding: .55rem .75rem;
+  text-align: left;
+  font-weight: 600;
+  font-size: .8rem;
+}
+
+.invoice-table td {
+  padding: .5rem .75rem;
+  border-bottom: 1px solid var(--green-border);
+}
+
+.invoice-table tbody tr:nth-child(even) { background: var(--green-light); }
+
+.col-num { width: 32px; text-align: center; }
+.code-cell { font-family: monospace; color: var(--text-muted); }
+.text-right { text-align: right; }
+
+.invoice-table tfoot td {
+  background: var(--green-light);
+  border-top: 2px solid var(--green-dark);
+  font-size: .92rem;
+  padding: .65rem .75rem;
+}
+
+.grand-total { font-size: 1.1rem; font-weight: 800; color: var(--green-dark); }
+
+/* Payment Terms */
+.payment-terms {
+  background: var(--green-light);
+  border: 1.5px solid var(--green-border);
+  border-radius: var(--radius);
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.payment-terms h4 {
+  font-size: .88rem;
+  font-weight: 700;
+  color: var(--charcoal);
+  margin-bottom: .5rem;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.payment-terms ul { padding-left: 1.1rem; }
+.payment-terms li { font-size: .85rem; margin-bottom: .25rem; }
+.terms-note { font-size: .8rem; color: var(--text-muted); margin-top: .65rem; font-style: italic; }
+
+/* Invoice Footer */
+.invoice-footer {
+  border-top: 1px solid var(--green-border);
+  padding-top: 1rem;
+  text-align: center;
+  font-size: .82rem;
+  color: var(--text-muted);
+}
+
+.invoice-footer p + p { margin-top: .2rem; }
+
+/* Print Actions (screen only) */
+.print-actions {
+  max-width: 820px;
+  margin: 1.5rem auto 0;
+  display: flex;
+  gap: .75rem;
+  flex-wrap: wrap;
+}
+
+.btn-print, .btn-pdf, .btn-back {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  padding: .6rem 1.2rem;
+  border-radius: 6px;
+  font-size: .9rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  text-decoration: none;
+  transition: opacity .15s;
+}
+
+.btn-print { background: var(--green-dark); color: var(--white); }
+.btn-pdf   { background: #1565C0; color: var(--white); }
+.btn-back  { background: #EEE; color: var(--charcoal); }
+
+.btn-print:hover, .btn-pdf:hover, .btn-back:hover { opacity: .85; }
+
+/* ============================================================
+   PRINT STYLESHEET
+   ============================================================ */
+@media print {
+  @page {
+    size: A4;
+    margin: 15mm 18mm;
+  }
+
+  body {
+    background: white;
+    font-size: 11pt;
+    color: black;
+  }
+
+  .invoice-body { padding: 0; }
+
+  .invoice-page {
+    border: none;
+    border-radius: 0;
+    padding: 0;
+    max-width: 100%;
+  }
+
+  .no-print { display: none !important; }
+
+  .invoice-table th { background: #2E7D32 !important; color: white !important; -webkit-print-color-adjust: exact; -weasyprint-color-adjust: exact; }
+  .invoice-table tbody tr:nth-child(even) { background: #E8F5E9 !important; -webkit-print-color-adjust: exact; -weasyprint-color-adjust: exact; }
+  .invoice-table tfoot td { background: #E8F5E9 !important; -webkit-print-color-adjust: exact; -weasyprint-color-adjust: exact; }
+  .payment-terms { background: #E8F5E9 !important; -webkit-print-color-adjust: exact; -weasyprint-color-adjust: exact; }
+}

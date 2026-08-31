@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Wholesale Catalog — LEAFS Chinese Vegetables{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/catalog.css' %}" />
+{% endblock %}
+
+{% block content %}
+
+{% if banners %}
+<!-- ===== Hero Banner Slider ===== -->
+<div class="banner-slider" id="bannerSlider">
+  {% for banner in banners %}
+  <div class="banner-slide {% if forloop.first %}active{% endif %}"
+       style="--overlay-opacity: {{ banner.overlay_opacity }};">
+    {% if banner.image %}
+    <img src="{{ banner.image.url }}" alt="{{ banner.heading }}" class="banner-bg" loading="{% if forloop.first %}eager{% else %}lazy{% endif %}" />
+    {% else %}
+    <div class="banner-bg banner-bg-fallback"></div>
+    {% endif %}
+    <div class="banner-overlay"></div>
+    <div class="banner-content container">
+      {% if banner.tag_label %}
+      <p class="banner-tag">{{ banner.tag_label }}</p>
+      {% endif %}
+      <h2 class="banner-heading">{{ banner.heading }}</h2>
+      {% if banner.subheading %}
+      <p class="banner-sub">{{ banner.subheading }}</p>
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+
+  {% if banners|length > 1 %}
+  <div class="banner-nav">
+    <button class="banner-prev" aria-label="Previous banner">&#8592;</button>
+    <div class="banner-dots" id="bannerDots">
+      {% for banner in banners %}
+      <button class="dot {% if forloop.first %}active{% endif %}" data-index="{{ forloop.counter0 }}" aria-label="Banner {{ forloop.counter }}"></button>
+      {% endfor %}
+    </div>
+    <button class="banner-next" aria-label="Next banner">&#8594;</button>
+  </div>
+  {% endif %}
+</div>
+{% endif %}
+
+<div class="catalog-layout drawer-hidden">
+
+  <!-- ===== LEFT: Catalog Grid ===== -->
+  <section class="catalog-main">
+    <div class="catalog-header">
+      <h1>Wholesale Produce Catalog</h1>
+      <p class="catalog-subtitle">Enter desired weight (kg) for each item. Your order summary updates automatically.</p>
+    </div>
+
+    {% if cart_error %}
+    <div class="alert alert-error">{{ cart_error }}</div>
+    {% endif %}
+
+    <!-- Category filter tabs -->
+    <div class="category-tabs" id="categoryTabs">
+      <button class="tab-btn active" data-category="all">All</button>
+      {% for veg in vegetables %}
+        {% ifchanged veg.category %}
+        <button class="tab-btn" data-category="{{ veg.category }}">{{ veg.get_category_display }}</button>
+        {% endifchanged %}
+      {% endfor %}
+    </div>
+
+    <!-- Product Grid -->
+    <div class="product-grid" id="productGrid">
+      {% for veg in vegetables %}
+      <div class="product-card {% if not veg.is_available %}out-of-stock{% endif %}"
+           data-id="{{ veg.pk }}"
+           data-price="{{ veg.price_per_kg }}"
+           data-title="{{ veg.title }}"
+           data-code="{{ veg.code }}"
+           data-category="{{ veg.category }}">
+
+        <div class="card-image-wrap">
+          {% if veg.image %}
+          <img src="{{ veg.image.url }}" alt="{{ veg.title }}" class="card-image" loading="lazy" />
+          {% else %}
+          <div class="card-image-placeholder">
+            <span>🥬</span>
+          </div>
+          {% endif %}
+          {% if not veg.is_available %}
+          <span class="stock-badge out">Out of Stock</span>
+          {% else %}
+          <span class="stock-badge in">In Stock</span>
+          {% endif %}
+        </div>
+
+        <div class="card-body">
+          <p class="card-code">{{ veg.code }}</p>
+          <h3 class="card-title">{{ veg.title }}</h3>
+          {% if veg.description %}
+          <p class="card-desc">{{ veg.description|truncatewords:12 }}</p>
+          {% endif %}
+          <p class="card-price">₹{{ veg.price_per_kg }} <span>/ kg</span></p>
+
+          <div class="weight-input-group {% if not veg.is_available %}disabled{% endif %}">
+            <button type="button" class="qty-btn decrement" {% if not veg.is_available %}disabled{% endif %}>−</button>
+            <input type="number"
+                   class="weight-input"
+                   value="0"
+                   min="0"
+                   step="0.01"
+                   aria-label="Weight in kg for {{ veg.title }}"
+                   {% if not veg.is_available %}disabled{% endif %} />
+            <button type="button" class="qty-btn increment" {% if not veg.is_available %}disabled{% endif %}>+</button>
+            <span class="weight-unit">kg</span>
+          </div>
+
+          <p class="line-subtotal" aria-live="polite">
+            Subtotal: <strong class="subtotal-value">₹0.00</strong>
+          </p>
+        </div>
+      </div>
+      {% empty %}
+      <div class="empty-catalog">
+        <p>No products are currently available. Please check back soon.</p>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <!-- ===== RIGHT: Order Drawer ===== -->
+  <aside class="order-drawer" id="orderDrawer" style="display:none;">
+    <div class="drawer-header">
+      <h2>Your Pre-Order</h2>
+      <span id="drawerBadge" class="drawer-badge" style="position:relative;top:auto;right:auto;"></span>
+    </div>
+
+    <div class="drawer-body" id="drawerBody">
+      <div id="drawerItems" class="drawer-items">
+        <p class="drawer-empty">No items selected yet.</p>
+      </div>
+
+      <div class="drawer-summary">
+        <div class="summary-row">
+          <span>Total Weight</span>
+          <strong id="totalWeight">0.00 kg</strong>
+        </div>
+        <div class="summary-row summary-total">
+          <span>Estimated Total</span>
+          <strong id="grandTotal">₹0.00</strong>
+        </div>
+      </div>
+
+      <!-- Buyer Info Form — shown when items are in cart -->
+      <div id="buyerFormSection" class="buyer-form-section" style="display:none;">
+        <h3 class="form-section-title">Buyer Information</h3>
+        <form method="post" action="{% url 'catalog:submit_order' %}" id="orderForm" novalidate>
+          {% csrf_token %}
+          <input type="hidden" name="cart_data" id="cartDataInput" />
+
+          {% for field in form %}
+          <div class="field-group {% if field.errors %}has-error{% endif %}">
+            <label for="{{ field.id_for_label }}">
+              {{ field.label }}
+              {% if field.field.required %}<span class="required">*</span>{% endif %}
+            </label>
+            {{ field }}
+            {% if field.errors %}
+            <span class="field-error">{{ field.errors|join:", " }}</span>
+            {% endif %}
+          </div>
+          {% endfor %}
+
+          <button type="submit" class="btn-submit" id="submitBtn">
+            ✅ Place Pre-Order
+          </button>
+          <p class="submit-note">Your order will be reviewed and confirmed by our team.</p>
+        </form>
+      </div>
+
+      <div id="emptyOrderMsg" class="empty-order-msg">
+        <p>Add items to your cart to begin a pre-order.</p>
+      </div>
+    </div>
+  </aside>
+
+
+</div><!-- /catalog-layout -->
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/catalog.js' %}"></script>
+{% endblock %}

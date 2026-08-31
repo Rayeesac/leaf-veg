@@ -1,0 +1,133 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Invoice {{ order.order_number }} — LEAFS Chinese Vegetables</title>
+  <link rel="stylesheet" href="{% static 'css/invoice.css' %}" />
+</head>
+<body class="invoice-body {% if pdf_mode %}pdf-mode{% endif %}">
+
+  <div class="invoice-page">
+
+    <!-- Invoice Header -->
+    <header class="invoice-header">
+      <div class="company-block">
+        <h1 class="company-name">LEAFS Chinese Vegetables</h1>
+        <p class="company-tagline">Fresh Wholesale Produce Supplier</p>
+        <address>
+          123 Market Street, Sydney NSW 2000<br />
+          Phone: (02) 9000 0000<br />
+          Email: orders@leafschinese.com.au
+        </address>
+      </div>
+      <div class="invoice-meta-block">
+        <h2 class="invoice-label">TAX INVOICE</h2>
+        <table class="invoice-meta-table">
+          <tr>
+            <td>Invoice / Order #</td>
+            <td><strong>{{ order.order_number }}</strong></td>
+          </tr>
+          <tr>
+            <td>Date Issued</td>
+            <td>{{ order.created_at|date:"d F Y" }}</td>
+          </tr>
+          <tr>
+            <td>Pickup Date</td>
+            <td>{{ order.pickup_date|date:"d F Y" }}</td>
+          </tr>
+          {% if order.pickup_time_slot %}
+          <tr>
+            <td>Time Slot</td>
+            <td>{{ order.pickup_time_slot }}</td>
+          </tr>
+          {% endif %}
+          <tr>
+            <td>Status</td>
+            <td><span class="status-pill status-{{ order.status }}">{{ order.get_status_display }}</span></td>
+          </tr>
+        </table>
+      </div>
+    </header>
+
+    <hr class="invoice-divider" />
+
+    <!-- Bill To -->
+    <section class="bill-to">
+      <h3>Bill To:</h3>
+      <p class="bill-name">{{ order.buyer_name }}</p>
+      <p>Attn: {{ order.contact_person }}</p>
+      <p>Phone: {{ order.phone_number }}</p>
+      {% if order.email %}<p>Email: {{ order.email }}</p>{% endif %}
+      {% if order.special_instructions %}
+      <p class="bill-notes"><em>Notes: {{ order.special_instructions }}</em></p>
+      {% endif %}
+    </section>
+
+    <!-- Line Items Table -->
+    <section class="line-items">
+      <table class="invoice-table">
+        <thead>
+          <tr>
+            <th class="col-num">#</th>
+            <th>Vegetable / Product</th>
+            <th>Product Code</th>
+            <th class="text-right">Weight (kg)</th>
+            <th class="text-right">Price / kg</th>
+            <th class="text-right">Line Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in items %}
+          <tr>
+            <td class="col-num">{{ forloop.counter }}</td>
+            <td>{{ item.vegetable.title }}</td>
+            <td class="code-cell">{{ item.vegetable.code }}</td>
+            <td class="text-right">{{ item.weight_kg }}</td>
+            <td class="text-right">₹{{ item.price_per_kg }}</td>
+            <td class="text-right">₹{{ item.line_total }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot>
+          <tr class="totals-row">
+            <td colspan="3"><strong>ORDER TOTALS</strong></td>
+            <td class="text-right"><strong>{{ order.total_weight_kg }} kg</strong></td>
+            <td></td>
+            <td class="text-right grand-total">₹{{ order.total_amount }}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </section>
+
+    <!-- Payment Terms -->
+    <section class="payment-terms">
+      <h4>Payment Terms &amp; Instructions</h4>
+      <ul>
+        <li>Payment is due on or before the pickup date.</li>
+        <li>Accepted payment methods: Cash, Bank Transfer (EFT).</li>
+        <li>Bank: Commonwealth Bank &nbsp;|&nbsp; BSB: 062-000 &nbsp;|&nbsp; Account: 1234 5678</li>
+        <li>Reference your order number <strong>{{ order.order_number }}</strong> in all payments.</li>
+      </ul>
+      <p class="terms-note">This is a wholesale pre-order invoice. Final invoice will be confirmed upon packing.</p>
+    </section>
+
+    <!-- Invoice Footer -->
+    <footer class="invoice-footer">
+      <p>Thank you for your business with LEAFS Chinese Vegetables.</p>
+      <p>Queries? Contact us at <strong>orders@leafschinese.com.au</strong> or <strong>(02) 9000 0000</strong>.</p>
+    </footer>
+
+  </div><!-- /invoice-page -->
+
+  {% if not pdf_mode %}
+  <div class="print-actions no-print">
+    <button onclick="window.print()" class="btn-print">🖨 Print Invoice</button>
+    <a href="{% url 'catalog:invoice_pdf' order.order_number %}" class="btn-pdf">⬇ Download PDF</a>
+    <a href="{% url 'catalog:order_confirmation' order.order_number %}" class="btn-back">← Back to Order</a>
+  </div>
+  {% endif %}
+
+</body>
+</html>
