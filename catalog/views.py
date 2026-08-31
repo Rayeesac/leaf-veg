@@ -169,6 +169,7 @@ def invoice_pdf(request, order_number):
     """Generate and stream a PDF invoice using WeasyPrint."""
     from weasyprint import HTML, CSS
     from django.template.loader import render_to_string
+    from django.conf import settings
 
     order = get_object_or_404(PreOrder, order_number=order_number)
     context = {
@@ -177,7 +178,13 @@ def invoice_pdf(request, order_number):
         'pdf_mode': True,
     }
     html_string = render_to_string('catalog/invoice.html', context, request=request)
-    pdf_file = HTML(string=html_string, base_url=request.build_absolute_uri('/')).write_pdf()
+
+    # Load CSS directly from the filesystem so WeasyPrint doesn't need to
+    # make an HTTP request — which fails in production environments.
+    css_path = settings.BASE_DIR / 'static' / 'css' / 'invoice.css'
+    stylesheet = CSS(filename=str(css_path))
+
+    pdf_file = HTML(string=html_string, base_url=str(settings.BASE_DIR)).write_pdf(stylesheets=[stylesheet])
 
     response = HttpResponse(pdf_file, content_type='application/pdf')
     response['Content-Disposition'] = (

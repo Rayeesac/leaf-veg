@@ -5,7 +5,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Invoice {{ order.order_number }} — LEAFS Chinese Vegetables</title>
+  {% if not pdf_mode %}
   <link rel="stylesheet" href="{% static 'css/invoice.css' %}" />
+  {% endif %}
 </head>
 <body class="invoice-body {% if pdf_mode %}pdf-mode{% endif %}">
 

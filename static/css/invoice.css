@@ -240,8 +240,8 @@ address {
 
   .no-print { display: none !important; }
 
-  .invoice-table th { background: #2E7D32 !important; color: white !important; -webkit-print-color-adjust: exact; -weasyprint-color-adjust: exact; }
-  .invoice-table tbody tr:nth-child(even) { background: #E8F5E9 !important; -webkit-print-color-adjust: exact; -weasyprint-color-adjust: exact; }
-  .invoice-table tfoot td { background: #E8F5E9 !important; -webkit-print-color-adjust: exact; -weasyprint-color-adjust: exact; }
-  .payment-terms { background: #E8F5E9 !important; -webkit-print-color-adjust: exact; -weasyprint-color-adjust: exact; }
+  .invoice-table th { background: #2E7D32 !important; color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .invoice-table tbody tr:nth-child(even) { background: #E8F5E9 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .invoice-table tfoot td { background: #E8F5E9 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .payment-terms { background: #E8F5E9 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
