@@ -249,6 +249,11 @@
         <div class="order-actions">
           <a href="{% url 'catalog:invoice_print' order.order_number %}" class="btn btn-outline" target="_blank">🖨 View Invoice</a>
           <a href="{% url 'catalog:invoice_pdf' order.order_number %}" class="btn btn-outline">⬇ Download PDF</a>
+          <form method="post" action="{% url 'catalog:order_delete' order.order_number %}"
+                onsubmit="return confirm('Permanently delete order {{ order.order_number }}? This cannot be undone.')">
+            {% csrf_token %}
+            <button type="submit" class="btn" style="width:100%;background:#FFEBEE;color:#C62828;border-color:#EF9A9A;">🗑 Delete Order</button>
+          </form>
         </div>
       </div>
     </div>

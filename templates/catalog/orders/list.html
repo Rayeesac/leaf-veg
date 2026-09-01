@@ -58,6 +58,9 @@
 
   .order-number-link { font-weight: 700; color: var(--green-dark); text-decoration: none; font-family: monospace; font-size: .88rem; }
   .order-number-link:hover { text-decoration: underline; }
+
+  .btn-action.delete { background: #FFEBEE; color: #C62828; border: 1.5px solid #EF9A9A; }
+  .btn-action.delete:hover { background: #C62828; color: #fff; }
 </style>
 {% endblock %}
 
@@ -155,6 +158,11 @@
           <td class="action-cell">
             <a href="{% url 'catalog:order_detail' order.order_number %}" class="btn-action edit">View</a>
             <a href="{% url 'catalog:invoice_print' order.order_number %}" class="btn-action" style="background:#F3E5F5;color:#6A1B9A;" target="_blank">Invoice</a>
+            <form method="post" action="{% url 'catalog:order_delete' order.order_number %}" style="display:inline;"
+                  onsubmit="return confirm('Permanently delete order {{ order.order_number }}? This cannot be undone.')">
+              {% csrf_token %}
+              <button type="submit" class="btn-action delete">Delete</button>
+            </form>
           </td>
         </tr>
         {% endfor %}

@@ -370,6 +370,60 @@
     slider.addEventListener('mouseenter', function () { clearInterval(timer); });
     slider.addEventListener('mouseleave', startAuto);
 
+    // ---- Drag on left / right edge zones only ----
+    var dragZones = slider.querySelectorAll('.banner-drag-zone');
+    if (dragZones.length) {
+      var dragStartX = 0;
+      var dragging   = false;
+      var THRESHOLD  = 40;
+
+      dragZones.forEach(function (zone) {
+        zone.addEventListener('mousedown', function (e) {
+          if (e.button !== 0) return;
+          dragStartX = e.clientX;
+          dragging   = true;
+          clearInterval(timer);
+          zone.style.cursor = 'grabbing';
+          e.preventDefault();
+        });
+      });
+
+      document.addEventListener('mousemove', function (e) {
+        if (!dragging) return;
+        // Visual feedback: update cursor on whichever zone started the drag
+        dragZones.forEach(function (z) {
+          if (z.style.cursor === 'grabbing') return;
+        });
+      });
+
+      document.addEventListener('mouseup', function (e) {
+        if (!dragging) return;
+        dragging = false;
+        dragZones.forEach(function (z) { z.style.cursor = ''; });
+        var diff = e.clientX - dragStartX;
+        if (Math.abs(diff) >= THRESHOLD) {
+          diff < 0 ? goTo(current + 1) : goTo(current - 1);
+          resetAuto();
+        } else {
+          startAuto();
+        }
+      });
+
+      // Touch swipe on full slider (natural on mobile)
+      slider.addEventListener('touchstart', function (e) {
+        dragStartX = e.touches[0].clientX;
+        clearInterval(timer);
+      }, { passive: true });
+
+      slider.addEventListener('touchend', function (e) {
+        var diff = e.changedTouches[0].clientX - dragStartX;
+        if (Math.abs(diff) >= THRESHOLD) {
+          diff < 0 ? goTo(current + 1) : goTo(current - 1);
+        }
+        startAuto();
+      }, { passive: true });
+    }
+
     startAuto();
   }());
 

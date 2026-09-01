@@ -404,3 +404,14 @@ def order_detail(request, order_number):
         'order_statuses': OrderStatus.choices,
         'page_title': f'Order — {order.order_number}',
     })
+
+
+@admin_required
+@require_POST
+def order_delete(request, order_number):
+    """Delete a pre-order and all its items (POST only)."""
+    order = get_object_or_404(PreOrder, order_number=order_number)
+    order_num = order.order_number
+    order.delete()
+    messages.success(request, f'Order {order_num} has been permanently deleted.')
+    return redirect('catalog:order_list')

@@ -33,6 +33,10 @@
   </div>
   {% endfor %}
 
+  <!-- Drag zones — left and right edges only -->
+  <div class="banner-drag-zone left"  id="bannerDragLeft"  aria-hidden="true"></div>
+  <div class="banner-drag-zone right" id="bannerDragRight" aria-hidden="true"></div>
+
   {% if banners|length > 1 %}
   <div class="banner-nav">
     <button class="banner-prev" aria-label="Previous banner">&#8592;</button>

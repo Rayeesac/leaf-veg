@@ -30,7 +30,13 @@
           <small>Chinese Vegetables</small>
         </span>
       </a>
-      <nav class="header-nav">
+
+      <!-- Hamburger (mobile only) -->
+      <button class="nav-hamburger" id="navHamburger" aria-label="Toggle navigation" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+
+      <nav class="header-nav" id="headerNav">
         <span class="nav-tag">Wholesale Pre-Order System</span>
         {% if user.is_superuser %}
         <a href="{% url 'catalog:order_list' %}" class="nav-manage-link">📋 Orders</a>
@@ -40,6 +46,19 @@
       </nav>
     </div>
   </header>
+
+  <script>
+    (function () {
+      var btn = document.getElementById('navHamburger');
+      var nav = document.getElementById('headerNav');
+      if (!btn || !nav) return;
+      btn.addEventListener('click', function () {
+        var open = nav.classList.toggle('open');
+        btn.classList.toggle('open', open);
+        btn.setAttribute('aria-expanded', open);
+      });
+    }());
+  </script>
 
   <!-- ====== Flash Messages ====== -->
   {% if messages %}

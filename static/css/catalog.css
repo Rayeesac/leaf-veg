@@ -10,6 +10,21 @@
   background: #111;
 }
 
+/* Left / right drag zones — sit above content, 15% wide each side */
+.banner-drag-zone {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 15%;
+  z-index: 10;
+  cursor: grab;
+}
+
+.banner-drag-zone:active { cursor: grabbing; }
+
+.banner-drag-zone.left  { left: 0; }
+.banner-drag-zone.right { right: 0; }
+
 .banner-slide {
   position: absolute;
   inset: 0;
