@@ -12,7 +12,7 @@
 
   <div class="manage-header">
     <div>
-      <h1>🖼 Manage Banners</h1>
+      <h1>Manage Banners</h1>
       <p class="manage-subtitle">Banners appear as a hero slideshow above the product catalog.</p>
     </div>
     <a href="{% url 'catalog:banner_create' %}" class="btn btn-primary">+ Add New Banner</a>
@@ -35,7 +35,6 @@
           <th>Heading</th>
           <th>Tag Label</th>
           <th>Image</th>
-          <th>Order</th>
           <th>Status</th>
           <th>Actions</th>
         </tr>
@@ -58,7 +57,6 @@
             <span class="no-image">No image</span>
             {% endif %}
           </td>
-          <td class="text-center">{{ banner.order }}</td>
           <td>
             <form method="post" action="{% url 'catalog:banner_toggle' banner.pk %}" style="display:inline">
               {% csrf_token %}

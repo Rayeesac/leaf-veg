@@ -1,4 +1,4 @@
-# LEAFS Chinese Vegetables — Wholesale Pre-Order & Billing System
+# LEAFS Exotic Vegetables
 
 A Django web application for wholesale B2B pre-ordering of fresh Chinese produce. Buyers browse the catalog, select quantities in kilograms, submit their pre-order, and immediately receive a printable/downloadable invoice. Administrators manage inventory, update order statuses, and generate pack-up batch reports.
 

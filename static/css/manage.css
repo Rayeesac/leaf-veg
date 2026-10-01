@@ -280,3 +280,24 @@
 }
 
 .text-right { text-align: right; }
+
+/* SKU auto-fill flash animation */
+@keyframes sku-flash {
+  0%   { background: var(--green-light); border-color: var(--green-dark); }
+  100% { background: var(--white);       border-color: var(--green-border); }
+}
+
+.sku-autofill {
+  animation: sku-flash 0.6s ease forwards;
+}
+
+
+/* Combined details textarea */
+.details-combined {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: .85rem;
+  line-height: 1.7;
+  resize: vertical;
+  min-height: 220px;
+  background: #fafffe;
+}

@@ -1,0 +1,242 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ page_title }} — LEAFS{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ---- Contact-edit page local styles ---- */
+  .se-page { max-width: 720px; margin: 0 auto; padding: 2rem 1rem 4rem; }
+
+  .se-back {
+    display: inline-flex; align-items: center; gap: .4rem;
+    font-size: .85rem; color: #57606a; text-decoration: none;
+    margin-bottom: 1.6rem;
+  }
+  .se-back:hover { color: #1f2328; }
+
+  .se-header { margin-bottom: 2rem; }
+  .se-header h1 { font-size: 1.5rem; font-weight: 700; color: #1f2328; margin: 0 0 .25rem; }
+  .se-header p  { font-size: .9rem; color: #57606a; margin: 0; }
+
+  .se-card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 1.25rem;
+  }
+
+  .se-section-title {
+    padding: .75rem 1.25rem;
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: #57606a;
+    background: #f7f8fa;
+    border-bottom: 1px solid #e5e7eb;
+    margin: 0;
+  }
+
+  .se-fields { padding: 1.25rem; display: flex; flex-direction: column; gap: 1rem; }
+
+  .se-field { display: flex; flex-direction: column; gap: .35rem; }
+  .se-field label { font-size: .8rem; font-weight: 600; color: #1f2328; }
+  .se-field .help { font-size: .75rem; color: #57606a; }
+  .se-field .error { font-size: .75rem; color: #b91c1c; }
+
+  .se-field input[type="text"],
+  .se-field input[type="email"],
+  .se-field input[type="url"],
+  .se-field textarea {
+    width: 100%;
+    padding: .5rem .75rem;
+    font-size: .9rem;
+    border: 1px solid #d0d7de;
+    border-radius: 6px;
+    background: #fff;
+    color: #1f2328;
+    transition: border-color .15s, box-shadow .15s;
+    box-sizing: border-box;
+  }
+  .se-field input:focus,
+  .se-field textarea:focus {
+    outline: none;
+    border-color: #2E7D32;
+    box-shadow: 0 0 0 3px rgba(46,125,50,.12);
+  }
+
+  .se-row-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+
+  .se-divider { border: none; border-top: 1px solid #e5e7eb; margin: 0; }
+
+  .se-actions {
+    padding: 1rem 1.25rem;
+    display: flex; gap: .75rem; align-items: center;
+    background: #f7f8fa;
+    border-top: 1px solid #e5e7eb;
+  }
+
+  .se-btn-primary {
+    padding: .55rem 1.4rem;
+    background: #2E7D32; color: #fff;
+    border: none; border-radius: 6px;
+    font-size: .9rem; font-weight: 600;
+    cursor: pointer; transition: background .15s;
+  }
+  .se-btn-primary:hover { background: #1B5E20; }
+
+  .se-btn-cancel {
+    padding: .55rem 1.2rem;
+    background: transparent; color: #57606a;
+    border: 1px solid #d0d7de; border-radius: 6px;
+    font-size: .9rem; font-weight: 500;
+    text-decoration: none; transition: border-color .15s, color .15s;
+  }
+  .se-btn-cancel:hover { border-color: #1f2328; color: #1f2328; }
+
+  @media (max-width: 540px) {
+    .se-row-2 { grid-template-columns: 1fr; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="se-page">
+
+  <a href="{% url 'catalog:catalog' %}#contact" class="se-back">← Back to page</a>
+
+  <div class="se-header">
+    <h1>Edit — Contact Us</h1>
+    <p>Changes are saved immediately and shown to all visitors.</p>
+  </div>
+
+  <form method="post" novalidate>
+    {% csrf_token %}
+
+    <!-- ── Section header ──────────────────────────────────── -->
+    <div class="se-card">
+      <p class="se-section-title">Section Header</p>
+      <div class="se-fields">
+        <div class="se-field">
+          <label for="{{ form.label.id_for_label }}">Sub-label <span style="font-weight:400;color:#57606a">(small uppercase text above title)</span></label>
+          {{ form.label }}
+          {% if form.label.errors %}<span class="error">{{ form.label.errors|join:", " }}</span>{% endif %}
+        </div>
+        <div class="se-field">
+          <label for="{{ form.title.id_for_label }}">Section Title</label>
+          {{ form.title }}
+          {% if form.title.errors %}<span class="error">{{ form.title.errors|join:", " }}</span>{% endif %}
+        </div>
+        <div class="se-field">
+          <label for="{{ form.intro.id_for_label }}">Intro Paragraph</label>
+          {{ form.intro }}
+          {% if form.intro.errors %}<span class="error">{{ form.intro.errors|join:", " }}</span>{% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Location card ───────────────────────────────────── -->
+    <div class="se-card">
+      <p class="se-section-title">📍 Location Card</p>
+      <div class="se-fields">
+        <div class="se-field">
+          <label for="{{ form.location_text.id_for_label }}">Address</label>
+          {{ form.location_text }}
+          <span class="help">{{ form.location_text.help_text }}</span>
+          {% if form.location_text.errors %}<span class="error">{{ form.location_text.errors|join:", " }}</span>{% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Phone / WhatsApp card ───────────────────────────── -->
+    <div class="se-card">
+      <p class="se-section-title">📞 WhatsApp / Phone Card</p>
+      <div class="se-fields">
+        <div class="se-row-2">
+          <div class="se-field">
+            <label for="{{ form.whatsapp_number.id_for_label }}">WhatsApp Number</label>
+            {{ form.whatsapp_number }}
+            <span class="help">{{ form.whatsapp_number.help_text }}</span>
+            {% if form.whatsapp_number.errors %}<span class="error">{{ form.whatsapp_number.errors|join:", " }}</span>{% endif %}
+          </div>
+          <div class="se-field">
+            <label for="{{ form.phone_display.id_for_label }}">Display Text</label>
+            {{ form.phone_display }}
+            {% if form.phone_display.errors %}<span class="error">{{ form.phone_display.errors|join:", " }}</span>{% endif %}
+          </div>
+        </div>
+        <div class="se-field">
+          <label for="{{ form.phone_hours.id_for_label }}">Hours Note</label>
+          {{ form.phone_hours }}
+          {% if form.phone_hours.errors %}<span class="error">{{ form.phone_hours.errors|join:", " }}</span>{% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Email card ──────────────────────────────────────── -->
+    <div class="se-card">
+      <p class="se-section-title">✉️ Email Card</p>
+      <div class="se-fields">
+        <div class="se-row-2">
+          <div class="se-field">
+            <label for="{{ form.email.id_for_label }}">Email Address</label>
+            {{ form.email }}
+            {% if form.email.errors %}<span class="error">{{ form.email.errors|join:", " }}</span>{% endif %}
+          </div>
+          <div class="se-field">
+            <label for="{{ form.email_meta.id_for_label }}">Note</label>
+            {{ form.email_meta }}
+            {% if form.email_meta.errors %}<span class="error">{{ form.email_meta.errors|join:", " }}</span>{% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Store hours card ────────────────────────────────── -->
+    <div class="se-card">
+      <p class="se-section-title">🕐 Store Hours Card</p>
+      <div class="se-fields">
+        <div class="se-row-2">
+          <div class="se-field">
+            <label for="{{ form.store_days.id_for_label }}">Days Open</label>
+            {{ form.store_days }}
+            {% if form.store_days.errors %}<span class="error">{{ form.store_days.errors|join:", " }}</span>{% endif %}
+          </div>
+          <div class="se-field">
+            <label for="{{ form.store_hours.id_for_label }}">Hours</label>
+            {{ form.store_hours }}
+            {% if form.store_hours.errors %}<span class="error">{{ form.store_hours.errors|join:", " }}</span>{% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Map ────────────────────────────────────────────── -->
+    <div class="se-card">
+      <p class="se-section-title">🗺️ Google Maps Embed</p>
+      <div class="se-fields">
+        <div class="se-field">
+          <label for="{{ form.map_embed_url.id_for_label }}">Embed URL</label>
+          {{ form.map_embed_url }}
+          <span class="help">{{ form.map_embed_url.help_text }}</span>
+          {% if form.map_embed_url.errors %}<span class="error">{{ form.map_embed_url.errors|join:", " }}</span>{% endif %}
+        </div>
+      </div>
+
+      <!-- ── Actions ──────────────────────────────────────── -->
+      <div class="se-actions">
+        <button type="submit" class="se-btn-primary">Save Changes</button>
+        <a href="{% url 'catalog:catalog' %}#contact" class="se-btn-cancel">Cancel</a>
+      </div>
+    </div>
+
+  </form>
+
+</div>
+{% endblock %}

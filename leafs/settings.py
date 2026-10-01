@@ -1,5 +1,5 @@
 """
-Django settings for Leafs Chinese Vegetables wholesale pre-order system.
+Django settings for Leafs Exotic Vegetables wholesale pre-order system.
 """
 import dj_database_url
 from pathlib import Path
@@ -20,6 +20,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_ckeditor_5',
     'catalog',
 ]
 
@@ -47,6 +48,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'catalog.context_processors.footer_contact',
             ],
         },
     },
@@ -100,6 +102,55 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Auth URLs
+LOGIN_URL = '/login/'
+LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/'
+
+# ---------------------------------------------------------------------------
+# CKEditor 5 — toolbar config for the vegetable details field
+# ---------------------------------------------------------------------------
+CKEDITOR_5_CONFIGS = {
+    'vegetable_details': {
+        'toolbar': {
+            'items': [
+                'heading', '|',
+                'bold', 'italic', 'underline', 'strikethrough', '|',
+                'fontSize', 'fontColor', '|',
+                'alignment', '|',
+                'bulletedList', 'numberedList', 'indent', 'outdent', '|',
+                'link', 'imageUpload', 'insertTable', 'blockQuote', 'horizontalLine', '|',
+                'code', 'codeBlock', '|',
+                'undo', 'redo',
+            ],
+            'shouldNotGroupWhenFull': True,
+        },
+        'heading': {
+            'options': [
+                {'model': 'paragraph', 'title': 'Paragraph', 'class': 'ck-heading_paragraph'},
+                {'model': 'heading2', 'view': 'h2', 'title': 'Heading 2', 'class': 'ck-heading_heading2'},
+                {'model': 'heading3', 'view': 'h3', 'title': 'Heading 3', 'class': 'ck-heading_heading3'},
+                {'model': 'heading4', 'view': 'h4', 'title': 'Heading 4', 'class': 'ck-heading_heading4'},
+            ],
+        },
+        'image': {
+            'toolbar': [
+                'imageTextAlternative', '|',
+                'imageStyle:inline', 'imageStyle:block', 'imageStyle:side',
+            ],
+        },
+        'table': {
+            'contentToolbar': ['tableColumn', 'tableRow', 'mergeTableCells'],
+        },
+        'fontSize': {
+            'options': [10, 12, 'default', 16, 18, 20, 24, 28, 36],
+        },
+        'height': '300px',
+    },
+}
+
+CKEDITOR_5_FILE_UPLOAD_PERMISSION = 'staff'
 
 # Security settings (enforce in production via environment)
 if not DEBUG:

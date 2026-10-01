@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}Wholesale Catalog — LEAFS Chinese Vegetables{% endblock %}
+{% block title %}Leafs Exotic Vegetables{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/catalog.css' %}" />
@@ -33,6 +33,12 @@
   </div>
   {% endfor %}
 
+  {% if user.is_authenticated %}
+  <a href="{% url 'catalog:banner_list' %}" class="banner-edit-btn" title="Manage Banners" aria-label="Manage Banners">
+    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M14.7 3.3a1 1 0 011.4 1.4l-9.9 9.9-2 .6.6-2 9.9-9.9z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </a>
+  {% endif %}
+
   <!-- Drag zones — left and right edges only -->
   <div class="banner-drag-zone left"  id="bannerDragLeft"  aria-hidden="true"></div>
   <div class="banner-drag-zone right" id="bannerDragRight" aria-hidden="true"></div>
@@ -51,18 +57,98 @@
 </div>
 {% endif %}
 
-<div class="catalog-layout drawer-hidden">
+<!-- ===== Our Vision ===== -->
+<section class="story-section" id="our-vision">
+  <div class="story-inner container">
 
-  <!-- ===== LEFT: Catalog Grid ===== -->
-  <section class="catalog-main">
-    <div class="catalog-header">
-      <h1>Wholesale Produce Catalog</h1>
-      <p class="catalog-subtitle">Enter desired weight (kg) for each item. Your order summary updates automatically.</p>
+    <div class="story-block story-block--reverse">
+      <div class="story-image-wrap">
+        {% if site_content.vision.image %}
+        <img src="{{ site_content.vision.image.url }}" alt="{{ site_content.vision.title }}" class="story-image" loading="lazy" />
+        {% else %}
+        <img src="https://images.unsplash.com/photo-1540420773420-3366772f4999?w=800&q=80&auto=format&fit=crop" alt="Colourful array of fresh exotic vegetables" class="story-image" loading="lazy" />
+        {% endif %}
+        <span class="story-image-badge story-image-badge--light">{{ site_content.vision.title }}</span>
+      </div>
+      <div class="story-text">
+        <p class="story-label">{{ site_content.vision.label }}</p>
+        <h2 class="story-title">
+          {{ site_content.vision.title }}
+          {% if user.is_authenticated %}
+          <a href="{% url 'catalog:section_edit' 'vision' %}" class="cms-edit-btn" title="Edit Our Vision" aria-label="Edit Our Vision">
+            <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M14.7 3.3a1 1 0 011.4 1.4l-9.9 9.9-2 .6.6-2 9.9-9.9z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </a>
+          {% endif %}
+        </h2>
+        <p class="story-body">{{ site_content.vision.body }}</p>
+        <div class="vision-pillars">
+          {% for pillar in site_content.vision.pillars %}
+          <div class="pillar">
+            {% if pillar.icon %}<span class="pillar-icon" aria-hidden="true">{{ pillar.icon }}</span>{% endif %}
+            <span class="pillar-label">{{ pillar.label }}</span>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
     </div>
 
-    {% if cart_error %}
-    <div class="alert alert-error">{{ cart_error }}</div>
-    {% endif %}
+  </div>
+</section>
+
+<!-- ===== Our Mission ===== -->
+<section class="story-section story-section--tint" id="our-mission">
+  <div class="story-inner container">
+
+    <div class="story-block">
+      <div class="story-image-wrap">
+        {% if site_content.mission.image %}
+        <img src="{{ site_content.mission.image.url }}" alt="{{ site_content.mission.title }}" class="story-image" loading="lazy" />
+        {% else %}
+        <img src="https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=800&q=80&auto=format&fit=crop" alt="Farmer harvesting fresh produce" class="story-image" loading="lazy" />
+        {% endif %}
+        <span class="story-image-badge">{{ site_content.mission.title }}</span>
+      </div>
+      <div class="story-text">
+        <p class="story-label">{{ site_content.mission.label }}</p>
+        <h2 class="story-title">
+          {{ site_content.mission.title }}
+          {% if user.is_authenticated %}
+          <a href="{% url 'catalog:section_edit' 'mission' %}" class="cms-edit-btn" title="Edit Our Mission" aria-label="Edit Our Mission">
+            <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M14.7 3.3a1 1 0 011.4 1.4l-9.9 9.9-2 .6.6-2 9.9-9.9z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </a>
+          {% endif %}
+        </h2>
+        <p class="story-body">{{ site_content.mission.body }}</p>
+        <ul class="story-highlights">
+          {% for pillar in site_content.mission.pillars %}
+          <li>
+            <svg class="hi-icon" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="currentColor" stroke-width="1.5"/><path d="M6 10l3 3 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            {{ pillar.label }}
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+
+<div class="catalog-layout" id="catalog">
+
+  <!-- ===== Catalog Grid ===== -->
+  <section class="catalog-main container">
+    <div class="catalog-header">
+      <h1>
+        Vegetables Catalog
+        {% if user.is_authenticated %}
+        <a href="{% url 'catalog:vegetable_list' %}" class="cms-edit-btn" title="Manage Vegetables" aria-label="Manage Vegetables">
+          <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M14.7 3.3a1 1 0 011.4 1.4l-9.9 9.9-2 .6.6-2 9.9-9.9z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+        {% endif %}
+      </h1>
+      <p class="catalog-subtitle">Browse our available exotic vegetables.</p>
+    </div>
 
     <!-- Category filter tabs -->
     <div class="category-tabs" id="categoryTabs">
@@ -77,12 +163,10 @@
     <!-- Product Grid -->
     <div class="product-grid" id="productGrid">
       {% for veg in vegetables %}
-      <div class="product-card {% if not veg.is_available %}out-of-stock{% endif %}"
-           data-id="{{ veg.pk }}"
-           data-price="{{ veg.price_per_kg }}"
-           data-title="{{ veg.title }}"
-           data-code="{{ veg.code }}"
-           data-category="{{ veg.category }}">
+      <a href="{% url 'catalog:vegetable_detail' veg.pk %}"
+         class="product-card {% if not veg.is_available %}out-of-stock{% endif %}"
+         data-id="{{ veg.pk }}"
+         data-category="{{ veg.category }}">
 
         <div class="card-image-wrap">
           {% if veg.image %}
@@ -103,28 +187,11 @@
           <p class="card-code">{{ veg.code }}</p>
           <h3 class="card-title">{{ veg.title }}</h3>
           {% if veg.description %}
-          <p class="card-desc">{{ veg.description|truncatewords:12 }}</p>
+            <br><small class="text-muted">{{ veg.description|truncatechars:65 }}</small>
           {% endif %}
-          <p class="card-price">₹{{ veg.price_per_kg }} <span>/ kg</span></p>
-
-          <div class="weight-input-group {% if not veg.is_available %}disabled{% endif %}">
-            <button type="button" class="qty-btn decrement" {% if not veg.is_available %}disabled{% endif %}>−</button>
-            <input type="number"
-                   class="weight-input"
-                   value="0"
-                   min="0"
-                   step="0.01"
-                   aria-label="Weight in kg for {{ veg.title }}"
-                   {% if not veg.is_available %}disabled{% endif %} />
-            <button type="button" class="qty-btn increment" {% if not veg.is_available %}disabled{% endif %}>+</button>
-            <span class="weight-unit">kg</span>
-          </div>
-
-          <p class="line-subtotal" aria-live="polite">
-            Subtotal: <strong class="subtotal-value">₹0.00</strong>
-          </p>
+          <span class="card-view-detail">View Details →</span>
         </div>
-      </div>
+      </a>
       {% empty %}
       <div class="empty-catalog">
         <p>No products are currently available. Please check back soon.</p>
@@ -133,105 +200,180 @@
     </div>
   </section>
 
-  <!-- ===== RIGHT: Order Drawer ===== -->
-  <aside class="order-drawer" id="orderDrawer" style="display:none;">
-    <div class="drawer-header">
-      <h2>Your Pre-Order</h2>
-      <span id="drawerBadge" class="drawer-badge" style="position:relative;top:auto;right:auto;"></span>
-    </div>
-
-    <!-- Step indicator -->
-    <div class="drawer-steps">
-      <div class="drawer-step active" id="stepPill1"><span class="step-num">1</span> Select Items</div>
-      <div class="drawer-step-arrow">&#8594;</div>
-      <div class="drawer-step" id="stepPill2"><span class="step-num">2</span> Your Details</div>
-    </div>
-
-    <div class="drawer-body" id="drawerBody">
-
-      <!-- ===== STEP 1: Cart summary + continue button ===== -->
-      <div id="step1Panel">
-        <div id="drawerItems" class="drawer-items">
-          <p class="drawer-empty">No items selected yet.</p>
-        </div>
-
-        <div class="drawer-summary">
-          <div class="summary-row">
-            <span>Total Weight</span>
-            <strong id="totalWeight">0.00 kg</strong>
-          </div>
-          <div class="summary-row summary-total">
-            <span>Estimated Total</span>
-            <strong id="grandTotal">₹0.00</strong>
-          </div>
-        </div>
-
-        <div id="emptyOrderMsg" class="empty-order-msg">
-          <p>Add items to your cart to begin a pre-order.</p>
-        </div>
-
-        <button type="button" class="btn-continue" id="continueBtn" style="display:none;">
-          Continue to Pre-Order &rarr;
-        </button>
-      </div>
-
-      <!-- ===== STEP 2: Buyer form ===== -->
-      <div id="step2Panel" style="display:none;">
-        <button type="button" class="btn-back" id="backBtn">&larr; Back to Products</button>
-
-        <div class="drawer-summary drawer-summary-compact">
-          <div class="summary-row">
-            <span>Total Weight</span>
-            <strong id="totalWeight2">0.00 kg</strong>
-          </div>
-          <div class="summary-row summary-total">
-            <span>Estimated Total</span>
-            <strong id="grandTotal2">₹0.00</strong>
-          </div>
-        </div>
-
-        <div id="buyerFormSection" class="buyer-form-section">
-          <h3 class="form-section-title">Buyer Information</h3>
-          <form method="post" action="{% url 'catalog:submit_order' %}" id="orderForm" novalidate>
-            {% csrf_token %}
-            <input type="hidden" name="cart_data" id="cartDataInput" />
-
-            {% for field in form %}
-            <div class="field-group {% if field.errors %}has-error{% endif %}">
-              <label for="{{ field.id_for_label }}">
-                {{ field.label }}
-                {% if field.field.required %}<span class="required">*</span>{% endif %}
-              </label>
-              {{ field }}
-              {% if field.errors %}
-              <span class="field-error">{{ field.errors|join:", " }}</span>
-              {% endif %}
-            </div>
-            {% endfor %}
-
-            <button type="submit" class="btn-submit" id="submitBtn">
-              ✅ Place Pre-Order
-            </button>
-            <p class="submit-note">Your order will be reviewed and confirmed by our team.</p>
-          </form>
-        </div>
-      </div>
-
-    </div>
-  </aside>
-
-
 </div><!-- /catalog-layout -->
 
-<!-- ===== Mobile Cart Bar (fixed bottom, mobile only) ===== -->
-<div class="mobile-cart-bar" id="mobileCartBar" style="display:none;">
-  <div class="mcb-info">
-    <span class="mcb-count" id="mcbCount">0 items</span>
-    <span class="mcb-sep">&middot;</span>
-    <span class="mcb-total" id="mcbTotal">₹0.00</span>
+
+<!-- ===== About Us ===== -->
+<section class="story-section story-section--tint" id="about-us">
+  <div class="story-inner container">
+
+    <div class="story-block">
+      {% if site_content.about.image %}
+      <div class="story-image-wrap">
+        <img src="{{ site_content.about.image.url }}" alt="{{ site_content.about.title }}" class="story-image" loading="lazy" />
+        <span class="story-image-badge">{{ site_content.about.title }}</span>
+      </div>
+      {% else %}
+      <div class="about-collage">
+
+        <!-- Logo banner -->
+        <div class="about-collage__logo">
+          <img src="{% static 'logo.png' %}" alt="LEAFS Exotic Vegetables" class="about-collage__logo-img" />
+        </div>
+
+        <!-- 4-cell vegetable image grid — uses catalog images, falls back to Unsplash -->
+        <div class="about-collage__grid">
+
+          {% for veg in about_images %}
+          <div class="about-collage__cell">
+            <img src="{{ veg.image.url }}" alt="{{ veg.title }}" loading="lazy" />
+            <span class="about-collage__name">{{ veg.title }}</span>
+          </div>
+          {% endfor %}
+
+          {# Fallback cells — shown when fewer than 4 catalog images exist #}
+          {% if about_images|length < 1 %}
+          <div class="about-collage__cell"><img src="https://images.unsplash.com/photo-1540420773420-3366772f4999?w=400&q=70&auto=format&fit=crop" alt="Exotic vegetables" loading="lazy" /></div>
+          {% endif %}
+          {% if about_images|length < 2 %}
+          <div class="about-collage__cell"><img src="https://images.unsplash.com/photo-1583845112203-29329902332e?w=400&q=70&auto=format&fit=crop" alt="Bok choy" loading="lazy" /></div>
+          {% endif %}
+          {% if about_images|length < 3 %}
+          <div class="about-collage__cell"><img src="https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=400&q=70&auto=format&fit=crop" alt="Fresh greens" loading="lazy" /></div>
+          {% endif %}
+          {% if about_images|length < 4 %}
+          <div class="about-collage__cell"><img src="https://images.unsplash.com/photo-1567306226416-28f0efdc88ce?w=400&q=70&auto=format&fit=crop" alt="Root vegetables" loading="lazy" /></div>
+          {% endif %}
+
+        </div>
+
+        <span class="story-image-badge about-collage__badge">Est. Kottakkal, Kerala</span>
+      </div>
+      {% endif %}
+      <div class="story-text">
+        <p class="story-label">{{ site_content.about.label }}</p>
+        <h2 class="story-title">
+          {{ site_content.about.title }}
+          {% if user.is_authenticated %}
+          <a href="{% url 'catalog:section_edit' 'about' %}" class="cms-edit-btn" title="Edit About Us" aria-label="Edit About Us">
+            <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M14.7 3.3a1 1 0 011.4 1.4l-9.9 9.9-2 .6.6-2 9.9-9.9z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </a>
+          {% endif %}
+        </h2>
+        <p class="story-body">{{ site_content.about.body }}</p>
+        <ul class="story-highlights">
+          {% for pillar in site_content.about.pillars %}
+          <li>
+            <svg class="hi-icon" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="currentColor" stroke-width="1.5"/><path d="M6 10l3 3 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            {{ pillar.label }}
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+
   </div>
-  <button type="button" class="mcb-btn" id="mcbBtn">View Pre-Order &rarr;</button>
-</div>
+</section>
+
+<!-- ===== Contact Us ===== -->
+<section class="contact-section" id="contact">
+  <div class="contact-inner container">
+
+    <div class="contact-header">
+      <p class="story-label">{{ contact.label }}</p>
+      <h2 class="story-title contact">
+        {{ contact.title }}
+        {% if user.is_authenticated %}
+        <a href="{% url 'catalog:contact_edit' %}" class="cms-edit-btn" title="Edit Contact Us" aria-label="Edit Contact Us">
+          <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M14.7 3.3a1 1 0 011.4 1.4l-9.9 9.9-2 .6.6-2 9.9-9.9z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+        {% endif %}
+      </h2>
+      <p class="contact-intro">{{ contact.intro }}</p>
+    </div>
+
+    <div class="contact-grid">
+
+      <!-- Info cards -->
+      <div class="contact-cards">
+
+        <div class="contact-card">
+          <div class="contact-card__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
+              <circle cx="12" cy="9" r="2.5"/>
+            </svg>
+          </div>
+          <div class="contact-card__body">
+            <p class="contact-card__title">Our Location</p>
+            <p class="contact-card__text">{{ contact.location_text|linebreaksbr }}</p>
+          </div>
+        </div>
+
+        <div class="contact-card">
+          <div class="contact-card__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 10.8 19.79 19.79 0 01.99 2.18 2 2 0 012.98 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L7.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/>
+            </svg>
+          </div>
+          <div class="contact-card__body">
+            <p class="contact-card__title">WhatsApp / Phone</p>
+            <p class="contact-card__text">
+              <a href="https://wa.me/{{ contact.whatsapp_number }}" class="contact-link">{{ contact.phone_display }}</a>
+            </p>
+            <p class="contact-card__meta">{{ contact.phone_hours }}</p>
+          </div>
+        </div>
+
+        <div class="contact-card">
+          <div class="contact-card__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="4" width="20" height="16" rx="2"/>
+              <path d="M2 7l10 7 10-7"/>
+            </svg>
+          </div>
+          <div class="contact-card__body">
+            <p class="contact-card__title">Email Us</p>
+            <p class="contact-card__text">
+              <a href="mailto:{{ contact.email }}" class="contact-link">{{ contact.email }}</a>
+            </p>
+            <p class="contact-card__meta">{{ contact.email_meta }}</p>
+          </div>
+        </div>
+
+        <div class="contact-card">
+          <div class="contact-card__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M12 6v6l4 2"/>
+            </svg>
+          </div>
+          <div class="contact-card__body">
+            <p class="contact-card__title">Store Hours</p>
+            <p class="contact-card__text">{{ contact.store_days }}</p>
+            <p class="contact-card__meta">{{ contact.store_hours }}</p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Embedded map -->
+      <div class="contact-map">
+        {% if contact.map_embed_url %}
+        <iframe
+          title="LEAFS Exotic Vegetables location"
+          src="{{ contact.map_embed_url }}"
+          allowfullscreen=""
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade">
+        </iframe>
+        {% endif %}
+      </div>
+
+    </div>
+  </div>
+</section>
+
 {% endblock %}
 
 {% block extra_js %}

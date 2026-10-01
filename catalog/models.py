@@ -1,7 +1,7 @@
-import datetime
 import logging
 from django.db import models
-from django.core.validators import MinValueValidator, MaxValueValidator
+from django.core.validators import MaxValueValidator
+from django_ckeditor_5.fields import CKEditor5Field
 
 logger = logging.getLogger('catalog')
 
@@ -21,12 +21,6 @@ class Vegetable(models.Model):
 
     title = models.CharField(max_length=200)
     code = models.CharField(max_length=50, unique=True, verbose_name='SKU / Product Code')
-    price_per_kg = models.DecimalField(
-        max_digits=10,
-        decimal_places=2,
-        validators=[MinValueValidator(0.01)],
-        verbose_name='Price per kg ($)',
-    )
     image = models.ImageField(upload_to='vegetables/', blank=True, null=True)
     description = models.TextField(blank=True)
     category = models.CharField(
@@ -37,6 +31,40 @@ class Vegetable(models.Model):
     is_available = models.BooleanField(default=True, verbose_name='In Stock')
     created_at = models.DateTimeField(auto_now_add=True)
 
+    # ---- Detail / informational fields ----
+    health_benefits = models.TextField(
+        blank=True,
+        verbose_name='Health Benefits',
+        help_text='Key health benefits of this vegetable (displayed on the detail page).',
+    )
+    nutrients = models.TextField(
+        blank=True,
+        verbose_name='Nutrients & Minerals',
+        help_text='Notable nutrients, minerals and dietary fibre content.',
+    )
+    vitamins = models.TextField(
+        blank=True,
+        verbose_name='Vitamins',
+        help_text='Vitamins present in significant amounts.',
+    )
+    culinary_uses = models.TextField(
+        blank=True,
+        verbose_name='Culinary Uses',
+        help_text='How this vegetable is typically cooked or used.',
+    )
+    origin = models.CharField(
+        max_length=200,
+        blank=True,
+        verbose_name='Origin / Region',
+        help_text='Where this vegetable originates from.',
+    )
+    details_html = CKEditor5Field(
+        blank=True,
+        verbose_name='Details (rich text)',
+        help_text='Full details entered via the rich-text editor on the manage page.',
+        config_name='vegetable_details',
+    )
+
     class Meta:
         ordering = ['category', 'title']
         verbose_name = 'Vegetable'
@@ -44,116 +72,6 @@ class Vegetable(models.Model):
 
     def __str__(self):
         return f'{self.title} ({self.code})'
-
-
-class OrderStatus(models.TextChoices):
-    PENDING = 'pending', 'Pending'
-    PACKED = 'packed', 'Packed'
-    READY = 'ready', 'Ready for Pickup'
-    COMPLETED = 'completed', 'Completed'
-    CANCELLED = 'cancelled', 'Cancelled'
-
-
-class PreOrder(models.Model):
-    """A wholesale pre-order placed by a buyer."""
-
-    order_number = models.CharField(max_length=50, unique=True, editable=False)
-    buyer_name = models.CharField(max_length=200, verbose_name='Business / Client Name')
-    contact_person = models.CharField(max_length=200, verbose_name='Contact Person')
-    phone_number = models.CharField(max_length=20)
-    email = models.EmailField(blank=True)
-    pickup_date = models.DateField(verbose_name='Preferred Pickup / Delivery Date')
-    pickup_time_slot = models.CharField(
-        max_length=100,
-        blank=True,
-        verbose_name='Preferred Time Slot',
-        help_text='e.g. 6:00 AM – 9:00 AM',
-    )
-    status = models.CharField(
-        max_length=20,
-        choices=OrderStatus.choices,
-        default=OrderStatus.PENDING,
-    )
-    total_weight_kg = models.DecimalField(
-        max_digits=10,
-        decimal_places=2,
-        default=0,
-        verbose_name='Total Weight (kg)',
-    )
-    total_amount = models.DecimalField(
-        max_digits=10,
-        decimal_places=2,
-        default=0,
-        verbose_name='Total Amount ($)',
-    )
-    special_instructions = models.TextField(blank=True, verbose_name='Packing / Delivery Notes')
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        ordering = ['-created_at']
-        verbose_name = 'Pre-Order'
-        verbose_name_plural = 'Pre-Orders'
-
-    def __str__(self):
-        return f'{self.order_number} — {self.buyer_name}'
-
-    def save(self, *args, **kwargs):
-        if not self.order_number:
-            self.order_number = self._generate_order_number()
-        super().save(*args, **kwargs)
-
-    @staticmethod
-    def _generate_order_number():
-        year = datetime.date.today().year
-        # Use a sequential suffix based on today's count + existing total
-        count = PreOrder.objects.count() + 1
-        return f'LCV-{year}-{count:05d}'
-
-    def recalculate_totals(self):
-        """Recompute weight and amount from related items. Call after saving items."""
-        from django.db.models import Sum
-        agg = self.items.aggregate(
-            total_weight=Sum('weight_kg'),
-            total_amount=Sum('line_total'),
-        )
-        self.total_weight_kg = agg['total_weight'] or 0
-        self.total_amount = agg['total_amount'] or 0
-        self.save(update_fields=['total_weight_kg', 'total_amount'])
-        logger.info('Recalculated totals for order %s', self.order_number)
-
-
-class OrderItem(models.Model):
-    """A single vegetable line item within a pre-order."""
-
-    order = models.ForeignKey(PreOrder, on_delete=models.CASCADE, related_name='items')
-    vegetable = models.ForeignKey(Vegetable, on_delete=models.PROTECT)
-    weight_kg = models.DecimalField(
-        max_digits=8,
-        decimal_places=2,
-        validators=[MinValueValidator(0.01)],
-        verbose_name='Weight (kg)',
-    )
-    price_per_kg = models.DecimalField(
-        max_digits=10,
-        decimal_places=2,
-        verbose_name='Price per kg ($)',
-    )
-    line_total = models.DecimalField(
-        max_digits=10,
-        decimal_places=2,
-        verbose_name='Line Total ($)',
-    )
-
-    class Meta:
-        verbose_name = 'Order Item'
-        verbose_name_plural = 'Order Items'
-
-    def __str__(self):
-        return f'{self.vegetable.title} × {self.weight_kg} kg'
-
-    def save(self, *args, **kwargs):
-        self.line_total = self.weight_kg * self.price_per_kg
-        super().save(*args, **kwargs)
 
 
 class Banner(models.Model):
@@ -197,3 +115,151 @@ class Banner(models.Model):
 
     def __str__(self):
         return self.heading
+
+
+class SiteSection(models.TextChoices):
+    VISION = 'vision', 'Our Vision'
+    MISSION = 'mission', 'Our Mission'
+    ABOUT = 'about', 'About Us'
+
+
+class SiteContent(models.Model):
+    """Editable CMS content for static homepage sections (Vision, Mission, About)."""
+
+    section = models.CharField(
+        max_length=20,
+        choices=SiteSection.choices,
+        unique=True,
+        verbose_name='Section',
+    )
+    label = models.CharField(
+        max_length=100,
+        blank=True,
+        verbose_name='Sub-label',
+        help_text='Small uppercase label above the title (e.g. "WHERE WE\'RE HEADED").',
+    )
+    title = models.CharField(
+        max_length=200,
+        blank=True,
+        verbose_name='Title',
+        help_text='Main section heading (e.g. "Our Vision").',
+    )
+    body = models.TextField(
+        blank=True,
+        verbose_name='Body Text',
+        help_text='Main paragraph text displayed in this section.',
+    )
+    image = models.ImageField(
+        upload_to='sections/',
+        blank=True,
+        null=True,
+        verbose_name='Section Image',
+        help_text='Upload an image for this section. Replaces the default Unsplash photo.',
+    )
+    pillars_json = models.JSONField(
+        default=list,
+        blank=True,
+        verbose_name='Box / List Items',
+        help_text='JSON array of items, each with "icon" and "label" keys.',
+    )
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Site Content'
+        verbose_name_plural = 'Site Contents'
+
+    def __str__(self):
+        return self.get_section_display()
+
+
+class ContactInfo(models.Model):
+    """Singleton model for the Contact Us section on the homepage."""
+
+    # Header
+    label = models.CharField(
+        max_length=100, blank=True, default='Get In Touch',
+        verbose_name='Sub-label',
+    )
+    title = models.CharField(
+        max_length=200, blank=True, default='Contact Us',
+        verbose_name='Title',
+    )
+    intro = models.TextField(
+        blank=True,
+        default=(
+            "Whether you're a restaurant, hotel, or home kitchen — we'd love to hear from you. "
+            "Visit us at our store or reach out through WhatsApp and we'll get back to you promptly."
+        ),
+        verbose_name='Intro Text',
+    )
+
+    # Location card
+    location_text = models.TextField(
+        blank=True,
+        default='Behind Bustand, Smart Trade City\nKottakkal, Malappuram Dt.\nKerala — 676503',
+        verbose_name='Location Text',
+        help_text='Each line will be shown on a separate line.',
+    )
+
+    # Phone / WhatsApp card
+    whatsapp_number = models.CharField(
+        max_length=20, blank=True, default='91XXXXXXXXXX',
+        verbose_name='WhatsApp Number',
+        help_text='Country code + number without + (e.g. 919876543210).',
+    )
+    phone_display = models.CharField(
+        max_length=30, blank=True, default='+91 XXXXX XXXXX',
+        verbose_name='Phone Display Text',
+    )
+    phone_hours = models.CharField(
+        max_length=80, blank=True, default='Mon – Sat, 6:00 AM – 8:00 PM',
+        verbose_name='Phone Hours',
+    )
+
+    # Email card
+    email = models.EmailField(
+        blank=True, default='info@leafsvegetables.com',
+        verbose_name='Email Address',
+    )
+    email_meta = models.CharField(
+        max_length=100, blank=True, default='We reply within 24 hours',
+        verbose_name='Email Note',
+    )
+
+    # Store hours card
+    store_days = models.CharField(
+        max_length=100, blank=True, default='All days',
+        verbose_name='Store Days',
+    )
+    store_hours = models.CharField(
+        max_length=100, blank=True, default='6:00 AM – 1:00 PM',
+        verbose_name='Store Hours',
+    )
+
+    # Map embed URL
+    map_embed_url = models.URLField(
+        max_length=1000,
+        blank=True,
+        default=(
+            'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d979.3!2d76.0032175!3d11.0036981'
+            '!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3ba7b5c26d65796f%3A0xacd7161adf7e19a4'
+            '!2sLEAFS%20CHINESE%20VEGETABLES!5e0!3m2!1sen!2sin!4v1!5m2!1sen!2sin'
+        ),
+        verbose_name='Google Maps Embed URL',
+        help_text='Paste the src URL from the Google Maps embed iframe.',
+    )
+
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Contact Info'
+        verbose_name_plural = 'Contact Info'
+
+    def __str__(self):
+        return 'Contact Info'
+
+    @classmethod
+    def get_solo(cls):
+        """Return the single ContactInfo row, creating it with defaults if absent."""
+        obj, _ = cls.objects.get_or_create(pk=1)
+        return obj

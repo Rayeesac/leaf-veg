@@ -1,18 +1,14 @@
-import json
 import logging
-from decimal import Decimal, InvalidOperation
 
 from django.contrib import messages
 from django.contrib.auth.decorators import user_passes_test
 
-admin_required = user_passes_test(lambda u: u.is_active and u.is_superuser, login_url='/admin/login/')
-from django.db import transaction
-from django.http import HttpResponse
+admin_required = user_passes_test(lambda u: u.is_active and u.is_superuser, login_url='/login/')
 from django.shortcuts import get_object_or_404, redirect, render
-from django.views.decorators.http import require_POST, require_http_methods
+from django.views.decorators.http import require_POST
 
-from .forms import BannerForm, CartItemData, PreOrderForm, VegetableForm
-from .models import Banner, OrderItem, OrderStatus, PreOrder, Vegetable
+from .forms import BannerForm, ContactInfoForm, SiteContentForm, VegetableForm
+from .models import Banner, ContactInfo, SiteContent, SiteSection, Vegetable
 
 logger = logging.getLogger('catalog')
 
@@ -21,176 +17,109 @@ logger = logging.getLogger('catalog')
 # Catalog
 # ---------------------------------------------------------------------------
 
+# Hardcoded defaults for each section — used when no DB record exists yet.
+_SECTION_DEFAULTS = {
+    SiteSection.VISION: {
+        'label': "Where We're Headed",
+        'title': 'Our Vision',
+        'body': (
+            'To be the most trusted name in exotic vegetable supply across Kerala — a brand synonymous'
+            ' with freshness, reliability, and variety. We envision a future where every kitchen,'
+            ' from home cooks to five-star chefs, has easy access to the finest produce harvested at'
+            ' peak nutrition and flavour.'
+        ),
+        'pillars': [
+            {'icon': '🌿', 'label': 'Freshness'},
+            {'icon': '🤝', 'label': 'Reliability'},
+            {'icon': '🥬', 'label': 'Variety'},
+        ],
+    },
+    SiteSection.MISSION: {
+        'label': 'What Drives Us',
+        'title': 'Our Mission',
+        'body': (
+            'To deliver fresh, responsibly sourced exotic vegetables with consistency and care.'
+            ' We are committed to supporting local farmers, minimising waste through smart supply chains,'
+            ' and ensuring every customer — wholesale or retail — receives produce they can trust,'
+            ' at the quality their tables deserve.'
+        ),
+        'pillars': [
+            {'icon': '', 'label': 'Supporting local farming communities'},
+            {'icon': '', 'label': 'Minimal-waste supply chain'},
+            {'icon': '', 'label': 'Quality you can count on, every time'},
+        ],
+    },
+    SiteSection.ABOUT: {
+        'label': 'Who We Are',
+        'title': 'About Us',
+        'body': (
+            'LEAFS Exotic Vegetables is a wholesale and retail supplier of premium Chinese and exotic'
+            ' produce, based in Kottakkal, Kerala. Founded on a passion for quality greens, we source'
+            ' directly from trusted farms to bring the freshest vegetables — from baby bok choy to'
+            ' lotus root — to restaurants, hotels, and households across the region.'
+        ),
+        'pillars': [
+            {'icon': '', 'label': 'Wholesale & retail supply'},
+            {'icon': '', 'label': 'Sourced from trusted local farms'},
+            {'icon': '', 'label': '20+ exotic vegetable varieties'},
+        ],
+    },
+}
+
+
+def _get_section_content():
+    """Return a dict keyed by section value with all display fields, merged from DB + defaults."""
+    content = {}
+    for key, defaults in _SECTION_DEFAULTS.items():
+        try:
+            obj = SiteContent.objects.get(section=key)
+            content[key.value] = {
+                'label':   obj.label   or defaults['label'],
+                'title':   obj.title   or defaults['title'],
+                'body':    obj.body    or defaults['body'],
+                'pillars': obj.pillars_json if obj.pillars_json else defaults['pillars'],
+                'image':   obj.image if obj.image else None,
+            }
+        except SiteContent.DoesNotExist:
+            entry = dict(defaults)
+            entry['image'] = None
+            content[key.value] = entry
+    return content
+
+
 def catalog(request):
-    """Main product catalog page with floating order drawer."""
+    """Main product catalog page."""
     vegetables = Vegetable.objects.filter(is_available=True).order_by('category', 'title')
     banners = Banner.objects.filter(is_active=True)
-    form = PreOrderForm()
+    # Up to 4 vegetables that have images, for the About Us collage
+    about_images = list(
+        Vegetable.objects.filter(is_available=True).exclude(image='').order_by('category', 'title')[:4]
+    )
     context = {
         'vegetables': vegetables,
         'banners': banners,
-        'form': form,
-        'page_title': 'Order Wholesale Produce',
+        'about_images': about_images,
+        'page_title': 'Produce Catalog',
+        'site_content': _get_section_content(),
+        'contact': ContactInfo.get_solo(),
     }
     return render(request, 'catalog/catalog.html', context)
 
 
-# ---------------------------------------------------------------------------
-# Pre-order submission
-# ---------------------------------------------------------------------------
-
-@require_POST
-@transaction.atomic
-def submit_order(request):
-    """
-    Processes the combined buyer-info form + JSON cart payload.
-    Creates PreOrder and OrderItem records, then redirects to confirmation.
-    """
-    form = PreOrderForm(request.POST)
-
-    # --- Parse and validate cart JSON ---
-    cart_json = request.POST.get('cart_data', '').strip()
-    cart_error = None
-    cart_items = []
-
-    try:
-        raw_items = json.loads(cart_json) if cart_json else []
-        if not isinstance(raw_items, list) or len(raw_items) == 0:
-            cart_error = 'Your order is empty. Please select at least one vegetable.'
-        else:
-            for raw in raw_items:
-                item_form = CartItemData(data={
-                    'vegetable_id': raw.get('id'),
-                    'weight_kg': raw.get('weight_kg'),
-                })
-                if not item_form.is_valid():
-                    cart_error = 'One or more cart items are invalid. Please refresh and try again.'
-                    break
-                cart_items.append(item_form.cleaned_data)
-    except (json.JSONDecodeError, TypeError):
-        cart_error = 'Invalid cart data. Please refresh and try again.'
-
-    if cart_error:
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            from django.http import JsonResponse
-            return JsonResponse({'errors': {'__all__': [cart_error]}}, status=422)
-        messages.error(request, cart_error)
-        vegetables = Vegetable.objects.filter(is_available=True).order_by('category', 'title')
-        banners = Banner.objects.filter(is_active=True)
-        return render(request, 'catalog/catalog.html', {
-            'vegetables': vegetables,
-            'banners': banners,
-            'form': form,
-            'cart_error': cart_error,
-            'page_title': 'Order Wholesale Produce',
-        })
-
-    if not form.is_valid():
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            from django.http import JsonResponse
-            return JsonResponse({'errors': form.errors}, status=422)
-        vegetables = Vegetable.objects.filter(is_available=True).order_by('category', 'title')
-        banners = Banner.objects.filter(is_active=True)
-        return render(request, 'catalog/catalog.html', {
-            'vegetables': vegetables,
-            'banners': banners,
-            'form': form,
-            'page_title': 'Order Wholesale Produce',
-        })
-
-    # --- Build order ---
-    pre_order = form.save()
-
-    vegetable_ids = [item['vegetable_id'] for item in cart_items]
-    vegetable_map = {
-        v.pk: v for v in Vegetable.objects.filter(pk__in=vegetable_ids, is_available=True)
-    }
-
-    for item in cart_items:
-        veg = vegetable_map.get(item['vegetable_id'])
-        if not veg:
-            # Vegetable became unavailable between page load and submission
-            continue
-        OrderItem.objects.create(
-            order=pre_order,
-            vegetable=veg,
-            weight_kg=item['weight_kg'],
-            price_per_kg=veg.price_per_kg,
-        )
-
-    pre_order.recalculate_totals()
-
-    if pre_order.items.count() == 0:
-        pre_order.delete()
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            from django.http import JsonResponse
-            return JsonResponse({'errors': {'__all__': ['None of the selected vegetables are currently available.']}}, status=422)
-        messages.error(request, 'None of the selected vegetables are currently available.')
-        return redirect('catalog:catalog')
-
-    logger.info('New pre-order created: %s for %s', pre_order.order_number, pre_order.buyer_name)
-    confirmation_url = redirect('catalog:order_confirmation', order_number=pre_order.order_number)['Location']
-    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        from django.http import JsonResponse
-        return JsonResponse({'redirect': confirmation_url})
-    return redirect('catalog:order_confirmation', order_number=pre_order.order_number)
-
-
-# ---------------------------------------------------------------------------
-# Order confirmation
-# ---------------------------------------------------------------------------
-
-def order_confirmation(request, order_number):
-    """Order confirmation page shown after successful submission."""
-    order = get_object_or_404(PreOrder, order_number=order_number)
-    context = {
-        'order': order,
-        'items': order.items.select_related('vegetable').all(),
-        'page_title': f'Order Confirmed — {order.order_number}',
-    }
-    return render(request, 'catalog/confirmation.html', context)
-
-
-# ---------------------------------------------------------------------------
-# Invoice / print view
-# ---------------------------------------------------------------------------
-
-def invoice_print(request, order_number):
-    """Printable invoice page (also used for PDF generation via WeasyPrint)."""
-    order = get_object_or_404(PreOrder, order_number=order_number)
-    context = {
-        'order': order,
-        'items': order.items.select_related('vegetable').all(),
-    }
-    return render(request, 'catalog/invoice.html', context)
-
-
-def invoice_pdf(request, order_number):
-    """Generate and stream a PDF invoice using WeasyPrint."""
-    from weasyprint import HTML, CSS
-    from django.template.loader import render_to_string
-    from django.conf import settings
-
-    order = get_object_or_404(PreOrder, order_number=order_number)
-    context = {
-        'order': order,
-        'items': order.items.select_related('vegetable').all(),
-        'pdf_mode': True,
-    }
-    html_string = render_to_string('catalog/invoice.html', context, request=request)
-
-    # Load CSS directly from the filesystem so WeasyPrint doesn't need to
-    # make an HTTP request — which fails in production environments.
-    css_path = settings.BASE_DIR / 'static' / 'css' / 'invoice.css'
-    stylesheet = CSS(filename=str(css_path))
-
-    pdf_file = HTML(string=html_string, base_url=str(settings.BASE_DIR)).write_pdf(stylesheets=[stylesheet])
-
-    response = HttpResponse(pdf_file, content_type='application/pdf')
-    response['Content-Disposition'] = (
-        f'attachment; filename="LCV-Invoice-{order.order_number}.pdf"'
+def vegetable_detail(request, pk):
+    """Public detail page for a single vegetable."""
+    veg = get_object_or_404(Vegetable, pk=pk)
+    # Suggest up to 4 related vegetables from the same category (exclude self)
+    related = list(
+        Vegetable.objects.filter(is_available=True, category=veg.category)
+        .exclude(pk=veg.pk)
+        .order_by('title')[:4]
     )
-    return response
+    return render(request, 'catalog/vegetables/detail.html', {
+        'veg': veg,
+        'related': related,
+        'page_title': veg.title,
+    })
 
 
 # ---------------------------------------------------------------------------
@@ -323,14 +252,14 @@ def vegetable_edit(request, pk):
 @admin_required
 @require_POST
 def vegetable_delete(request, pk):
-    """Delete a vegetable (POST only). Blocked if orders reference it."""
+    """Delete a vegetable (POST only)."""
     veg = get_object_or_404(Vegetable, pk=pk)
     try:
         title = veg.title
         veg.delete()
         messages.success(request, f'"{title}" removed from catalog.')
     except Exception:
-        messages.error(request, f'Cannot delete "{veg.title}" — it is referenced by existing orders. Mark it as Out of Stock instead.')
+        messages.error(request, f'Cannot delete "{veg.title}" — it may be referenced by existing data. Mark it as Out of Stock instead.')
     return redirect('catalog:vegetable_list')
 
 
@@ -346,72 +275,63 @@ def vegetable_toggle(request, pk):
     return redirect('catalog:vegetable_list')
 
 
+
+
 # ---------------------------------------------------------------------------
-# Order management (admin/superuser only)
+# Site content editing (logged-in users only)
 # ---------------------------------------------------------------------------
 
 @admin_required
-def order_list(request):
-    """Admin page: all orders with summary stats and status filter."""
-    from django.db.models import Count, Sum
+def section_edit(request, section):
+    """Edit a homepage section — label, title, body, pillars."""
+    from django.http import Http404
+    valid_sections = [s.value for s in SiteSection]
+    if section not in valid_sections:
+        raise Http404
 
-    status_filter = request.GET.get('status', '')
-    orders = PreOrder.objects.order_by('-created_at')
-    if status_filter:
-        orders = orders.filter(status=status_filter)
-
-    # Summary stats (always across all orders, not filtered)
-    stats = PreOrder.objects.aggregate(
-        total_orders=Count('pk'),
-        total_amount=Sum('total_amount'),
-        total_weight=Sum('total_weight_kg'),
+    # Get or create with defaults pre-populated
+    defaults_data = _SECTION_DEFAULTS.get(SiteSection(section), {})
+    obj, created = SiteContent.objects.get_or_create(
+        section=section,
+        defaults={
+            'label': defaults_data.get('label', ''),
+            'title': defaults_data.get('title', ''),
+            'body':  defaults_data.get('body', ''),
+            'pillars_json': defaults_data.get('pillars', []),
+        },
     )
-    status_counts = {
-        s.value: PreOrder.objects.filter(status=s).count()
-        for s in OrderStatus
-    }
-
-    return render(request, 'catalog/orders/list.html', {
-        'orders': orders,
-        'status_filter': status_filter,
-        'order_statuses': OrderStatus.choices,
-        'stats': stats,
-        'status_counts': status_counts,
-        'page_title': 'Manage Orders',
-    })
-
-
-@admin_required
-def order_detail(request, order_number):
-    """Admin page: full detail view of a single order with status update."""
-    order = get_object_or_404(PreOrder, order_number=order_number)
+    section_label = obj.get_section_display()
 
     if request.method == 'POST':
-        new_status = request.POST.get('status')
-        valid_statuses = [s.value for s in OrderStatus]
-        if new_status in valid_statuses:
-            order.status = new_status
-            order.save(update_fields=['status'])
-            messages.success(request, f'Order {order.order_number} status updated to "{order.get_status_display()}".')
-            return redirect('catalog:order_detail', order_number=order.order_number)
-        else:
-            messages.error(request, 'Invalid status value.')
+        form = SiteContentForm(request.POST, request.FILES, instance=obj)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'"{section_label}" updated successfully.')
+            return redirect('catalog:catalog')
+    else:
+        form = SiteContentForm(instance=obj)
 
-    items = order.items.select_related('vegetable').all()
-    return render(request, 'catalog/orders/detail.html', {
-        'order': order,
-        'items': items,
-        'order_statuses': OrderStatus.choices,
-        'page_title': f'Order — {order.order_number}',
+    return render(request, 'catalog/section_edit.html', {
+        'form': form,
+        'section': section,
+        'section_label': section_label,
+        'page_title': f'Edit — {section_label}',
     })
 
 
 @admin_required
-@require_POST
-def order_delete(request, order_number):
-    """Delete a pre-order and all its items (POST only)."""
-    order = get_object_or_404(PreOrder, order_number=order_number)
-    order_num = order.order_number
-    order.delete()
-    messages.success(request, f'Order {order_num} has been permanently deleted.')
-    return redirect('catalog:order_list')
+def contact_edit(request):
+    """Edit the Contact Us section."""
+    obj = ContactInfo.get_solo()
+    if request.method == 'POST':
+        form = ContactInfoForm(request.POST, instance=obj)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Contact info updated successfully.')
+            return redirect('catalog:catalog')
+    else:
+        form = ContactInfoForm(instance=obj)
+    return render(request, 'catalog/contact_edit.html', {
+        'form': form,
+        'page_title': 'Edit — Contact Us',
+    })

@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # =============================================================
-# LEAFS Chinese Vegetables — Initial Setup Script
+# LEAFS Exotic Vegetables — Initial Setup Script
 # Run once after cloning to configure the project environment.
 # =============================================================
 set -e
 
-echo "=== LEAFS Chinese Vegetables — Setup ==="
+echo "=== LEAFS Exotic Vegetables — Setup ==="
 
 # 1. Check Python version
 python_version=$(python3 --version 2>&1)

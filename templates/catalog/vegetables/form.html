@@ -3,6 +3,10 @@
 
 {% block title %}{{ page_title }} — LEAFS{% endblock %}
 
+{% block extra_css %}
+{{ form.media.css }}
+{% endblock %}
+
 {% block content %}
 <div class="manage-page container">
 
@@ -85,7 +89,6 @@
         <p class="preview-code">{{ veg.code }}</p>
         <p class="preview-title">{{ veg.title }}</p>
         <p class="preview-cat">{{ veg.get_category_display }}</p>
-        <p class="preview-price">₹{{ veg.price_per_kg }} <span>/ kg</span></p>
       </div>
     </div>
     {% endif %}
@@ -93,4 +96,36 @@
   </div>
 
 </div>
+
+{% endblock %}
+
+{% block extra_js %}
+{{ form.media.js }}
+<script>
+(function () {
+  'use strict';
+
+  var titleInput = document.getElementById('id_title');
+  var codeInput  = document.getElementById('id_code');
+  if (!titleInput || !codeInput) return;
+
+  function titleToSku(title) {
+    return title
+      .trim()
+      .toUpperCase()
+      .replace(/[^A-Z0-9\s]/g, '')   // strip non-alphanumeric (except spaces)
+      .trim()
+      .replace(/\s+/g, '_');          // spaces → underscores
+  }
+
+  titleInput.addEventListener('input', function () {
+    var sku = titleToSku(titleInput.value);
+    codeInput.value = sku;
+    if (sku) {
+      codeInput.classList.add('sku-autofill');
+      setTimeout(function () { codeInput.classList.remove('sku-autofill'); }, 400);
+    }
+  });
+}());
+</script>
 {% endblock %}

@@ -55,11 +55,11 @@ body {
   width: 45%;
 }
 
-.company-name {
-  font-size: 1.6rem;
-  font-weight: 800;
-  color: var(--green-dark);
-  margin-bottom: .2rem;
+.invoice-logo {
+  height: 56px;
+  width: auto;
+  display: block;
+  margin-bottom: .4rem;
 }
 
 .company-tagline {

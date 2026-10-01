@@ -1,0 +1,207 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign In — LEAFS Exotic Vegetables</title>
+
+  <link rel="icon" type="image/svg+xml" href="{% static 'favicon.svg' %}" />
+  <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="{% static 'css/main.css' %}" />
+
+  <style>
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: var(--surface);
+    }
+
+    .login-wrap {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2.5rem 1rem;
+    }
+
+    .login-card {
+      width: 100%;
+      max-width: 400px;
+      background: #fff;
+      border: 1px solid var(--green-border);
+      border-radius: 14px;
+      box-shadow: var(--shadow-md);
+      overflow: hidden;
+    }
+
+    .login-card__head {
+      background: var(--green-dark);
+      padding: 2rem 2rem 1.6rem;
+      text-align: center;
+    }
+
+    .login-card__logo {
+      height: 52px;
+      width: auto;
+      margin: 0 auto 1rem;
+      display: block;
+      /* invert the logo to white on the green header */
+      filter: brightness(0) invert(1);
+    }
+
+    .login-card__tagline {
+      font-size: .8rem;
+      color: rgba(255,255,255,.7);
+      letter-spacing: .05em;
+      text-transform: uppercase;
+      font-weight: 500;
+    }
+
+    .login-card__body {
+      padding: 1.75rem 2rem 2rem;
+    }
+
+    .login-card__title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--charcoal);
+      margin-bottom: 1.4rem;
+      text-align: center;
+    }
+
+    .login-field {
+      display: flex;
+      flex-direction: column;
+      gap: .35rem;
+      margin-bottom: 1rem;
+    }
+
+    .login-field label {
+      font-size: .8rem;
+      font-weight: 600;
+      color: var(--charcoal);
+    }
+
+    .login-field input {
+      padding: .55rem .8rem;
+      font-size: .95rem;
+      border: 1px solid #d0d7de;
+      border-radius: var(--radius-sm);
+      background: #fff;
+      color: var(--charcoal);
+      width: 100%;
+      transition: border-color .15s, box-shadow .15s;
+      font-family: var(--font);
+    }
+
+    .login-field input:focus {
+      outline: none;
+      border-color: var(--green-dark);
+      box-shadow: 0 0 0 3px rgba(46,125,50,.12);
+    }
+
+    .login-error {
+      background: var(--danger-bg);
+      border: 1px solid #f5c6cb;
+      border-radius: var(--radius-sm);
+      color: var(--danger);
+      font-size: .82rem;
+      padding: .6rem .85rem;
+      margin-bottom: 1rem;
+    }
+
+    .login-btn {
+      width: 100%;
+      padding: .65rem 1rem;
+      background: var(--green-dark);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: .95rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: var(--font);
+      transition: background .15s;
+      margin-top: .4rem;
+    }
+
+    .login-btn:hover { background: var(--green-mid); }
+
+    .login-footer {
+      text-align: center;
+      margin-top: 1.2rem;
+      font-size: .8rem;
+      color: var(--text-muted);
+    }
+
+    .login-footer a {
+      color: var(--green-dark);
+      font-weight: 500;
+    }
+
+    /* footer bar */
+    .site-footer-mini {
+      text-align: center;
+      padding: 1rem;
+      font-size: .78rem;
+      color: var(--text-muted);
+      border-top: 1px solid var(--green-border);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="login-wrap">
+    <div class="login-card">
+
+      <div class="login-card__head">
+        <img src="{% static 'logo.png' %}" alt="LEAFS Exotic Vegetables" class="login-card__logo" />
+        <p class="login-card__tagline">Wholesale &amp; Retail — Kottakkal, Kerala</p>
+      </div>
+
+      <div class="login-card__body">
+        <p class="login-card__title">Sign in to continue</p>
+
+        {% if form.errors %}
+        <div class="login-error">
+          Invalid username or password. Please try again.
+        </div>
+        {% endif %}
+
+        <form method="post" novalidate>
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{{ next }}" />
+
+          <div class="login-field">
+            <label for="id_username">Username</label>
+            <input type="text" id="id_username" name="username" autofocus autocomplete="username"
+                   value="{{ form.username.value|default:'' }}" placeholder="Enter your username" />
+          </div>
+
+          <div class="login-field">
+            <label for="id_password">Password</label>
+            <input type="password" id="id_password" name="password" autocomplete="current-password"
+                   placeholder="Enter your password" />
+          </div>
+
+          <button type="submit" class="login-btn">Sign In</button>
+        </form>
+
+        <p class="login-footer">
+          <a href="{% url 'catalog:catalog' %}">← Back to homepage</a>
+        </p>
+      </div>
+
+    </div>
+  </div>
+
+  <footer class="site-footer-mini">
+    © {% now "Y" %} LEAFS Exotic Vegetables, Kottakkal
+  </footer>
+
+</body>
+</html>

@@ -31,7 +31,6 @@
           <th>Title</th>
           <th>SKU / Code</th>
           <th>Category</th>
-          <th class="text-right">Price / kg</th>
           <th>Status</th>
           <th>Actions</th>
         </tr>
@@ -54,7 +53,6 @@
           </td>
           <td><code>{{ veg.code }}</code></td>
           <td>{{ veg.get_category_display }}</td>
-          <td class="text-right"><strong>₹{{ veg.price_per_kg }}</strong></td>
           <td>
             <form method="post" action="{% url 'catalog:vegetable_toggle' veg.pk %}" style="display:inline">
               {% csrf_token %}

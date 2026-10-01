@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ veg.title }} — LEAFS Exotic Vegetables{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/catalog.css' %}" />
+{% endblock %}
+
+{% block content %}
+
+<div class="veg-detail-page container">
+
+  <!-- Breadcrumb -->
+  <nav class="vd-breadcrumb" aria-label="Breadcrumb">
+    <a href="{% url 'catalog:catalog' %}#catalog">← Back to Catalog</a>
+    <span class="vd-breadcrumb__sep" aria-hidden="true">/</span>
+    <span class="vd-breadcrumb__current">{{ veg.title }}</span>
+  </nav>
+
+  <!-- ===== Hero row ===== -->
+  <div class="vd-hero">
+
+    <!-- Image -->
+    <div class="vd-hero__image-wrap">
+      {% if veg.image %}
+      <img src="{{ veg.image.url }}" alt="{{ veg.title }}" class="vd-hero__image" />
+      {% else %}
+      <div class="vd-hero__image-placeholder">
+        <span aria-hidden="true">🥬</span>
+      </div>
+      {% endif %}
+      {% if not veg.is_available %}
+      <span class="stock-badge out vd-hero__badge">Out of Stock</span>
+      {% else %}
+      <span class="stock-badge in vd-hero__badge">In Stock</span>
+      {% endif %}
+    </div>
+
+    <!-- Identity -->
+    <div class="vd-hero__info">
+      <p class="vd-hero__category">{{ veg.get_category_display }}</p>
+      <h1 class="vd-hero__title">{{ veg.title }}</h1>
+      {% if veg.origin %}
+      <p class="vd-hero__origin">
+        <svg class="vd-icon" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M10 2a6 6 0 016 6c0 4.5-6 10-6 10S4 12.5 4 8a6 6 0 016-6z" stroke="currentColor" stroke-width="1.5"/><circle cx="10" cy="8" r="2" stroke="currentColor" stroke-width="1.5"/></svg>
+        {{ veg.origin }}
+      </p>
+      {% endif %}
+      <p class="vd-hero__code">SKU: {{ veg.code }}</p>
+
+      {% if veg.description %}
+      <p class="vd-hero__desc">{{ veg.description }}</p>
+      {% endif %}
+    </div>
+
+  </div><!-- /vd-hero -->
+
+  <!-- ===== Details (rich text) ===== -->
+  {% if veg.details_html %}
+  <div class="vd-richtext-panel">
+    <div class="vd-richtext-panel__body vd-prose ck-content">{{ veg.details_html|safe }}</div>
+  </div>
+  {% else %}
+  <div class="vd-empty-info">
+    <p>Detailed nutritional information for this vegetable will be available soon.</p>
+  </div>
+  {% endif %}
+
+  <!-- ===== Related vegetables ===== -->
+  {% if related %}
+  <section class="vd-related">
+    <h2 class="vd-related__title">More in {{ veg.get_category_display }}</h2>
+    <div class="vd-related__grid">
+      {% for r in related %}
+      <a href="{% url 'catalog:vegetable_detail' r.pk %}" class="vd-related__card">
+        <div class="vd-related__img-wrap">
+          {% if r.image %}
+          <img src="{{ r.image.url }}" alt="{{ r.title }}" loading="lazy" />
+          {% else %}
+          <div class="vd-related__img-placeholder"><span aria-hidden="true">🥬</span></div>
+          {% endif %}
+        </div>
+        <p class="vd-related__name">{{ r.title }}</p>
+      </a>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+</div><!-- /veg-detail-page -->
+
+{% endblock %}

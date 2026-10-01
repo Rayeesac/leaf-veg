@@ -1,77 +1,8 @@
-import datetime
 import json
 from django import forms
 from django.core.exceptions import ValidationError
-from .models import Banner, PreOrder, Vegetable, VegetableCategory
-
-
-class PreOrderForm(forms.ModelForm):
-    """Buyer information form for a new wholesale pre-order."""
-
-    class Meta:
-        model = PreOrder
-        fields = [
-            'buyer_name',
-            'contact_person',
-            'phone_number',
-            'email',
-            'pickup_date',
-            'pickup_time_slot',
-            'special_instructions',
-        ]
-        widgets = {
-            'buyer_name': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'e.g. Green Dragon Imports Pty Ltd',
-                'autocomplete': 'organization',
-            }),
-            'contact_person': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'e.g. John Smith',
-                'autocomplete': 'name',
-            }),
-            'phone_number': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'e.g. 0412 345 678',
-                'autocomplete': 'tel',
-                'type': 'tel',
-            }),
-            'email': forms.EmailInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'contact@yourbusiness.com (optional)',
-                'autocomplete': 'email',
-            }),
-            'pickup_date': forms.DateInput(attrs={
-                'class': 'form-control',
-                'type': 'date',
-                'min': (datetime.date.today() + datetime.timedelta(days=1)).isoformat(),
-            }),
-            'pickup_time_slot': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'e.g. 6:00 AM – 9:00 AM',
-            }),
-            'special_instructions': forms.Textarea(attrs={
-                'class': 'form-control',
-                'rows': 3,
-                'placeholder': 'Packing preferences, delivery notes, allergies, etc.',
-            }),
-        }
-
-    def clean_phone_number(self):
-        phone = self.cleaned_data.get('phone_number', '').strip()
-        if not phone:
-            raise ValidationError('Phone number is required.')
-        # Allow digits, spaces, plus, hyphens, parentheses
-        import re
-        if not re.match(r'^[\d\s\+\-\(\)]{7,20}$', phone):
-            raise ValidationError('Enter a valid phone number.')
-        return phone
-
-    def clean_pickup_date(self):
-        pickup_date = self.cleaned_data.get('pickup_date')
-        if pickup_date and pickup_date <= datetime.date.today():
-            raise ValidationError('Pickup date must be tomorrow or later — same-day orders are not accepted.')
-        return pickup_date
+from django_ckeditor_5.widgets import CKEditor5Widget
+from .models import Banner, ContactInfo, SiteContent, Vegetable
 
 
 class BannerForm(forms.ModelForm):
@@ -79,11 +10,11 @@ class BannerForm(forms.ModelForm):
 
     class Meta:
         model = Banner
-        fields = ['heading', 'subheading', 'tag_label', 'image', 'overlay_opacity', 'order', 'is_active']
+        fields = ['heading', 'subheading', 'tag_label', 'image', 'is_active']
         widgets = {
             'heading': forms.TextInput(attrs={
                 'class': 'form-control',
-                'placeholder': 'e.g. Fresh Chinese vegetables, pre-ordered by the kilogram',
+                'placeholder': 'e.g. Fresh Exotic vegetables, pre-ordered by the kilogram',
             }),
             'subheading': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -92,15 +23,6 @@ class BannerForm(forms.ModelForm):
             'tag_label': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'e.g. WHOLESALE PRE-ORDERS',
-            }),
-            'overlay_opacity': forms.NumberInput(attrs={
-                'class': 'form-control',
-                'min': 0,
-                'max': 90,
-            }),
-            'order': forms.NumberInput(attrs={
-                'class': 'form-control',
-                'min': 0,
             }),
             'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
@@ -111,24 +33,27 @@ class VegetableForm(forms.ModelForm):
 
     class Meta:
         model = Vegetable
-        fields = ['title', 'code', 'category', 'price_per_kg', 'image', 'description', 'is_available']
+        fields = [
+            'title', 'code', 'category', 'image', 'description',
+            'is_available', 'details_html',
+        ]
+        labels = {
+            'is_available': 'Show as In Stock on the catalog',
+            'description': 'Description',
+        }
         widgets = {
             'title': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'e.g. Bok Choy (Baby)',
             }),
             'code': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'e.g. LCV-001',
+                'class': 'form-control sku-readonly',
+                'readonly': True,
+                'placeholder': 'Auto-generated from title',
+                'tabindex': '-1',
             }),
             'category': forms.Select(attrs={
                 'class': 'form-control',
-            }),
-            'price_per_kg': forms.NumberInput(attrs={
-                'class': 'form-control',
-                'placeholder': '0.00',
-                'min': '0.01',
-                'step': '0.01',
             }),
             'description': forms.Textarea(attrs={
                 'class': 'form-control',
@@ -136,6 +61,10 @@ class VegetableForm(forms.ModelForm):
                 'placeholder': 'Brief description of this vegetable (optional).',
             }),
             'is_available': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'details_html': CKEditor5Widget(
+                attrs={'class': 'django_ckeditor_5'},
+                config_name='vegetable_details',
+            ),
         }
 
     def clean_code(self):
@@ -147,17 +76,126 @@ class VegetableForm(forms.ModelForm):
             raise ValidationError('A vegetable with this SKU/code already exists.')
         return code
 
-    def clean_price_per_kg(self):
-        price = self.cleaned_data.get('price_per_kg')
-        if price is not None and price <= 0:
-            raise ValidationError('Price must be greater than zero.')
-        return price
+
+class SiteContentForm(forms.ModelForm):
+    """Form for editing a homepage section — label, title, body, and up to 3 pillar/list items."""
+
+    # Pillar rows — icon + label for each of the 3 boxes/bullets
+    pillar_0_icon  = forms.CharField(required=False, label='Item 1 — Icon / Emoji',
+                                     widget=forms.TextInput(attrs={'class': 'form-control pillar-icon-field', 'maxlength': '10'}))
+    pillar_0_label = forms.CharField(required=False, label='Item 1 — Label',
+                                     widget=forms.TextInput(attrs={'class': 'form-control'}))
+    pillar_1_icon  = forms.CharField(required=False, label='Item 2 — Icon / Emoji',
+                                     widget=forms.TextInput(attrs={'class': 'form-control pillar-icon-field', 'maxlength': '10'}))
+    pillar_1_label = forms.CharField(required=False, label='Item 2 — Label',
+                                     widget=forms.TextInput(attrs={'class': 'form-control'}))
+    pillar_2_icon  = forms.CharField(required=False, label='Item 3 — Icon / Emoji',
+                                     widget=forms.TextInput(attrs={'class': 'form-control pillar-icon-field', 'maxlength': '10'}))
+    pillar_2_label = forms.CharField(required=False, label='Item 3 — Label',
+                                     widget=forms.TextInput(attrs={'class': 'form-control'}))
+
+    clear_image = forms.BooleanField(
+        required=False,
+        label='Remove current image (revert to default)',
+        widget=forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+    )
+
+    class Meta:
+        model = SiteContent
+        fields = ['label', 'title', 'body', 'image']
+        widgets = {
+            'label': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'e.g. WHERE WE\'RE HEADED',
+            }),
+            'title': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'e.g. Our Vision',
+            }),
+            'body': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 5,
+                'placeholder': 'Main paragraph text for this section.',
+            }),
+            'image': forms.ClearableFileInput(attrs={'class': 'form-control', 'accept': 'image/*'}),
+        }
+        labels = {
+            'label': 'Sub-label (small uppercase text above title)',
+            'title': 'Section Title',
+            'body': 'Body Text',
+            'image': 'Section Image',
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Pre-fill pillar fields from existing pillars_json on the instance
+        if self.instance and self.instance.pk:
+            pillars = self.instance.pillars_json or []
+            for i in range(3):
+                if i < len(pillars):
+                    self.fields[f'pillar_{i}_icon'].initial = pillars[i].get('icon', '')
+                    self.fields[f'pillar_{i}_label'].initial = pillars[i].get('label', '')
+
+    def save(self, commit=True):
+        obj = super().save(commit=False)
+        # Clear image if requested
+        if self.cleaned_data.get('clear_image'):
+            obj.image = None
+        # Pack pillar fields back into pillars_json
+        pillars = []
+        for i in range(3):
+            icon = self.cleaned_data.get(f'pillar_{i}_icon', '').strip()
+            label = self.cleaned_data.get(f'pillar_{i}_label', '').strip()
+            if icon or label:
+                pillars.append({'icon': icon, 'label': label})
+        obj.pillars_json = pillars
+        if commit:
+            obj.save()
+        return obj
 
 
-class CartItemData(forms.Form):
-    """
-    Used only for server-side validation of the JSON cart payload
-    sent from the catalog page on order submission.
-    """
-    vegetable_id = forms.IntegerField(min_value=1)
-    weight_kg = forms.DecimalField(min_value=0.01, max_digits=8, decimal_places=2)
+class ContactInfoForm(forms.ModelForm):
+    """Form for editing the Contact Us section."""
+
+    class Meta:
+        model = ContactInfo
+        fields = [
+            'label', 'title', 'intro',
+            'location_text',
+            'whatsapp_number', 'phone_display', 'phone_hours',
+            'email', 'email_meta',
+            'store_days', 'store_hours',
+            'map_embed_url',
+        ]
+        widgets = {
+            'label':           forms.TextInput(attrs={'class': 'form-control'}),
+            'title':           forms.TextInput(attrs={'class': 'form-control'}),
+            'intro':           forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'location_text':   forms.Textarea(attrs={'class': 'form-control', 'rows': 3,
+                                                     'placeholder': 'One line per address line'}),
+            'whatsapp_number': forms.TextInput(attrs={'class': 'form-control',
+                                                      'placeholder': 'e.g. 919876543210'}),
+            'phone_display':   forms.TextInput(attrs={'class': 'form-control',
+                                                      'placeholder': 'e.g. +91 98765 43210'}),
+            'phone_hours':     forms.TextInput(attrs={'class': 'form-control'}),
+            'email':           forms.EmailInput(attrs={'class': 'form-control'}),
+            'email_meta':      forms.TextInput(attrs={'class': 'form-control'}),
+            'store_days':      forms.TextInput(attrs={'class': 'form-control'}),
+            'store_hours':     forms.TextInput(attrs={'class': 'form-control'}),
+            'map_embed_url':   forms.URLInput(attrs={'class': 'form-control',
+                                                     'placeholder': 'https://www.google.com/maps/embed?...'}),
+        }
+        labels = {
+            'label':           'Sub-label (small uppercase text above title)',
+            'title':           'Section Title',
+            'intro':           'Intro Paragraph',
+            'location_text':   'Location (one address line per line)',
+            'whatsapp_number': 'WhatsApp Number (digits only, with country code)',
+            'phone_display':   'Phone Display Text',
+            'phone_hours':     'Phone / WhatsApp Hours',
+            'email':           'Email Address',
+            'email_meta':      'Email Note (e.g. "We reply within 24 hours")',
+            'store_days':      'Store — Days Open',
+            'store_hours':     'Store — Hours',
+            'map_embed_url':   'Google Maps Embed URL',
+        }
