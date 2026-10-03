@@ -221,6 +221,8 @@ img { max-width: 100%; display: block; }
 
 /* ---- Mobile header ---- */
 @media (max-width: 768px) {
+  .brand-logo { height: 38px; }
+
   .nav-hamburger { display: flex; }
 
   .header-nav {
@@ -482,9 +484,20 @@ img { max-width: 100%; display: block; }
 .footer-bar__copy {
   flex: 1 1 auto;
   text-align: center;
-  color: rgba(255,255,255,.55);
+  color: #fff;
   font-size: .78rem;
+  font-weight: 700;
   margin: 0;
+}
+
+.footer-bar__copy a {
+  color: #fff;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.footer-bar__copy a:hover {
+  text-decoration: underline;
 }
 
 .footer-bar__nav {

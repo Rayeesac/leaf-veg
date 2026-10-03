@@ -50,6 +50,15 @@
 .manage-table tr.row-inactive td { opacity: .5; }
 .manage-table tbody tr:hover td { background: var(--green-light); }
 
+/* Hide SKU / Code column in vegetable list */
+.manage-table th:nth-child(3),
+.manage-table td:nth-child(3) { display: none; }
+
+/* Hide SKU / Code field row in vegetable add/edit form */
+#id_code { display: none; }
+#id_code + * { display: none; }   /* hides any sibling hint text */
+.field-group:has(#id_code) { display: none; }
+
 .text-center { text-align: center; }
 .text-muted  { color: var(--text-muted); font-size: .8rem; }
 .no-image    { color: var(--text-muted); font-style: italic; font-size: .8rem; }
@@ -260,7 +269,7 @@
 .stock-badge.out { background: var(--danger); color: #fff; }
 
 .preview-card-body { padding: .75rem .85rem; }
-.preview-code  { font-size: .68rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .04em; }
+.preview-code  { display: none; }
 .preview-title { font-size: .95rem; font-weight: 700; color: var(--charcoal); margin: .2rem 0; }
 .preview-cat   { font-size: .75rem; color: var(--text-muted); margin-bottom: .3rem; }
 .preview-price { font-size: 1.05rem; font-weight: 700; color: var(--green-dark); }

@@ -348,7 +348,7 @@
 /* Card Body */
 .card-body { padding: .85rem; flex: 1; display: flex; flex-direction: column; gap: .3rem; }
 
-.card-code { font-size: .7rem; color: var(--text-muted); font-weight: 500; letter-spacing: .04em; text-transform: uppercase; }
+.card-code { display: none; }
 .card-title { font-size: 1rem; font-weight: 700; color: var(--charcoal); line-height: 1.3; }
 .card-desc { font-size: .8rem; color: var(--text-muted); flex: 1; }
 
@@ -1278,13 +1278,7 @@ a.product-card:hover .card-view-detail {
   color: var(--green-mid);
 }
 
-.vd-hero__code {
-  font-size: .75rem;
-  font-weight: 500;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: .06em;
-}
+.vd-hero__code { display: none; }
 
 .vd-hero__desc {
   font-size: .95rem;
