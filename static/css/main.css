@@ -308,7 +308,7 @@ img { max-width: 100%; display: block; }
   display: inline-flex;
   align-items: center;
   gap: .4rem;
-  padding: .6rem 1.2rem;
+  padding: 4px 6px;
   border-radius: var(--radius-sm);
   font-size: .9rem;
   font-weight: 500;

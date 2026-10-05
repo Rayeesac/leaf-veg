@@ -42,7 +42,7 @@
       <tbody>
         {% for banner in banners %}
         <tr class="{% if not banner.is_active %}row-inactive{% endif %}">
-          <td>{{ banner.pk }}</td>
+          <td>{{ forloop.counter }}</td>
           <td>
             <strong>{{ banner.heading }}</strong>
             {% if banner.subheading %}

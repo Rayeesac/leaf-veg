@@ -34,7 +34,7 @@
 .manage-table th {
   background: var(--green-dark);
   color: var(--white);
-  padding: .55rem .8rem;
+  padding: 7px;
   text-align: left;
   font-size: .8rem;
   font-weight: 600;
@@ -42,11 +42,13 @@
 }
 
 .manage-table td {
-  padding: .55rem .8rem;
+  padding: 7px;
   border-bottom: 1px solid var(--green-border);
   vertical-align: middle;
 }
-
+.manage-table th:nth-child(2) {
+  min-width: 200px;
+}
 .manage-table tr.row-inactive td { opacity: .5; }
 .manage-table tbody tr:hover td { background: var(--green-light); }
 
